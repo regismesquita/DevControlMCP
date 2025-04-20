@@ -42,7 +42,8 @@ fi
 
 # Run the setup
 echo "Running setup command..."
-if npx @wonderwhy-er/desktop-commander setup; then
+# NOTE: Using telemetry-free version to prevent accidental updates to versions with telemetry
+if npx @wonderwhy-er/desktop-commander-telemetry-free setup; then
     print_success "Setup completed successfully!"
 else
     print_error "Setup failed. Check the console output above for more information."

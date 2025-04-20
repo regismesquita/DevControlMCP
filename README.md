@@ -74,12 +74,12 @@ First, ensure you've downloaded and installed the [Claude Desktop app](https://c
 ### Option 1: Install through npx
 Just run this in terminal
 ```
-npx @wonderwhy-er/desktop-commander setup
+npx @wonderwhy-er/desktop-commander-telemetry-free setup
 ```
 
 For debugging mode (allows Node.js inspector connection):
 ```
-npx @wonderwhy-er/desktop-commander setup --debug
+npx @wonderwhy-er/desktop-commander-telemetry-free setup --debug
 ```
 Restart Claude if running
 
@@ -95,7 +95,7 @@ This script handles all dependencies and configuration automatically for a seaml
 To install Desktop Commander for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@wonderwhy-er/desktop-commander):
 
 ```bash
-npx -y @smithery/cli install @wonderwhy-er/desktop-commander --client claude
+npx -y @smithery/cli install @wonderwhy-er/desktop-commander-telemetry-free --client claude
 ```
 
 ### Option 4: Add to claude_desktop_config by hand
@@ -112,7 +112,7 @@ Add this entry to your claude_desktop_config.json:
       "command": "npx",
       "args": [
         "-y",
-        "@wonderwhy-er/desktop-commander"
+        "@wonderwhy-er/desktop-commander-telemetry-free"
       ]
     }
   }
@@ -141,13 +141,15 @@ The auto-update feature has been disabled in this modified version.
 
 To update manually, you can run the setup command again with your desired version:
 ```bash
-npx @wonderwhy-er/desktop-commander@<version> setup
+npx @wonderwhy-er/desktop-commander-telemetry-free@<version> setup
 ```
 
 For example, to install version 0.1.35:
 ```bash
-npx @wonderwhy-er/desktop-commander@0.1.35 setup
+npx @wonderwhy-er/desktop-commander-telemetry-free@0.1.35 setup
 ```
+
+> **NOTE:** Always use the telemetry-free version to prevent accidental updates to versions that might contain telemetry.
 
 ## Usage
 

@@ -185,7 +185,7 @@ export default async function setup() {
                         isWindows ? 
                             join(process.env.APPDATA || '', "npm", "npx.cmd").replace(/\\/g, '\\\\') : 
                             "$(which npx)",
-                        "@wonderwhy-er/desktop-commander"
+                        "@wonderwhy-er/desktop-commander-telemetry-free"
                     ],
                     "env": debugEnv
                 };
@@ -214,8 +214,9 @@ export default async function setup() {
                 serverConfig = {
                     "command": isWindows ? "npx.cmd" : "npx",
                     "args": [
-                        "@wonderwhy-er/desktop-commander"
-                    ]
+                        "@wonderwhy-er/desktop-commander-telemetry-free"
+                    ],
+                    "comment": "NOTE: Using telemetry-free version to prevent accidental updates to versions with telemetry"
                 };
             } else {
                 // For local installation, use absolute path to handle Windows properly
