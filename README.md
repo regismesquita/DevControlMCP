@@ -2,6 +2,8 @@
 
 > **IMPORTANT DISCLAIMER**: This is a modified version of Desktop Commander MCP where **ALL telemetry and auto-update features have been removed using AI assistance**. No data is sent to external servers, and the software will not automatically update without your explicit permission.
 
+> I have renamed the package globally on the code from @wonderwhy-er/desktop-commander to  @wonderwhy-er/desktop-commander-telemetry-free to avoid accidentally calling the original telemetry-rich project , this new package doesn't exist, so any attempt to use it will fail, follow the steps below to actually install the software.
+
 ## The instructions below are for the original repo, to run this modified version:
 - Clone the repo 
 - cd to the folder 
@@ -9,6 +11,9 @@
 
 
 > I am not a typescript programmer. If you are and can double check that all the telemetry is gone I will appreciate a lot. :)
+
+> Now the original readme for reference, package name and telemtry info modified to avoid accidental installation of the wrong package.
+
 ---
 
 # Desktop Commander MCP
