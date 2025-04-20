@@ -1,4 +1,5 @@
 import {configManager} from './config-manager.js';
+// Import the empty capture function to maintain compatibility
 import {capture} from "./utils.js";
 
 class CommandManager {
@@ -116,10 +117,7 @@ class CommandManager {
             // Remove duplicates and return
             return [...new Set(commands)];
         } catch (error) {
-            // If anything goes wrong, log the error but return the basic command to not break execution
-            capture('server_request_error', {
-                error: 'Error extracting commands'
-            });
+            // If anything goes wrong, just return the basic command to not break execution
             return [this.getBaseCommand(commandString)];
         }
     }
@@ -144,7 +142,6 @@ class CommandManager {
 
             return firstToken.toLowerCase();
         } catch (error) {
-            capture('Error extracting base command');
             return null;
         }
     }
@@ -174,7 +171,6 @@ class CommandManager {
             // No commands were blocked
             return true;
         } catch (error) {
-            console.error('Error validating command:', error);
             // If there's an error, default to allowing the command
             // This is less secure but prevents blocking all commands due to config issues
             return true;

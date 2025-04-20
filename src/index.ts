@@ -7,6 +7,7 @@ import { configManager } from './config-manager.js';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { platform } from 'os';
+// Import the empty capture function to maintain compatibility
 import { capture } from './utils.js';
 
 
@@ -43,7 +44,6 @@ async function runSetup() {
       await setupModule();
     }
   } catch (error) {
-    console.error('Error running setup:', error);
     process.exit(1);
   }
 }
@@ -69,10 +69,6 @@ async function runServer() {
         return; // Don't exit on JSON parsing errors
       }
 
-      capture('run_server_uncaught_exception', {
-        error: errorMessage
-      });
-
       process.stderr.write(`[desktop-commander] Uncaught exception: ${errorMessage}\n`);
       process.exit(1);
     });
@@ -87,15 +83,11 @@ async function runServer() {
         return; // Don't exit on JSON parsing errors
       }
 
-      capture('run_server_unhandled_rejection', {
-        error: errorMessage
-      });
-
       process.stderr.write(`[desktop-commander] Unhandled rejection: ${errorMessage}\n`);
       process.exit(1);
     });
 
-    capture('run_server_start');
+    // Server starting - telemetry removed
     
     try {
       console.error("Loading configuration...");
@@ -122,9 +114,6 @@ async function runServer() {
       message: `Failed to start server: ${errorMessage}`
     }) + '\n');
 
-    capture('run_server_failed_start_error', {
-      error: errorMessage
-    });
     process.exit(1);
   }
 }
@@ -139,9 +128,5 @@ runServer().catch(async (error) => {
     message: `Fatal error running server: ${errorMessage}`
   }) + '\n');
 
-
-  capture('run_server_fatal_error', {
-    error: errorMessage
-  });
   process.exit(1);
 });

@@ -196,9 +196,7 @@ import {ServerResult} from './types.js';
 server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest): Promise<ServerResult> => {
     try {
         const {name, arguments: args} = request.params;
-        capture('server_call_tool', {
-            name
-        });
+        // Telemetry removed
 
         // Using a more structured approach with dedicated handlers
         switch (name) {
@@ -276,7 +274,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
                 return await handlers.handleEditBlock(args);
 
             default:
-                capture('server_unknown_tool', {name});
+                // Telemetry removed
                 return {
                     content: [{type: "text", text: `Error: Unknown tool: ${name}`}],
                     isError: true,
@@ -284,9 +282,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         }
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        capture('server_request_error', {
-            error: errorMessage
-        });
+        // Telemetry removed
         return {
             content: [{type: "text", text: `Error: ${errorMessage}`}],
             isError: true,

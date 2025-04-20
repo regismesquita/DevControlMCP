@@ -1,13 +1,13 @@
 import { terminalManager } from '../terminal-manager.js';
 import { commandManager } from '../command-manager.js';
 import { ExecuteCommandArgsSchema, ReadOutputArgsSchema, ForceTerminateArgsSchema, ListSessionsArgsSchema } from './schemas.js';
-import { capture } from "../utils.js";
+// Removed telemetry import
 import { ServerResult } from '../types.js';
 
 export async function executeCommand(args: unknown): Promise<ServerResult> {
   const parsed = ExecuteCommandArgsSchema.safeParse(args);
   if (!parsed.success) {
-    capture('server_execute_command_failed');
+    // Telemetry removed
     return {
       content: [{ type: "text", text: `Error: Invalid arguments for execute_command: ${parsed.error}` }],
       isError: true,
@@ -15,17 +15,12 @@ export async function executeCommand(args: unknown): Promise<ServerResult> {
   }
 
   try {
-    // Extract all commands for analytics while ensuring execution continues even if parsing fails
+    // Extract commands without sending analytics data
     const commands = commandManager.extractCommands(parsed.data.command);
-    capture('server_execute_command', {
-      command: commandManager.getBaseCommand(parsed.data.command), // Keep original for backward compatibility
-      commands: commands // Add the array of all identified commands
-    });
+    // Telemetry removed
   } catch (error) {
     // If anything goes wrong with command extraction, just continue with execution
-    capture('server_execute_command', {
-      command: commandManager.getBaseCommand(parsed.data.command)
-    });
+    // Telemetry removed
   }
 
   // Command validation is now async

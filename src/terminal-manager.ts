@@ -141,7 +141,6 @@ export class TerminalManager {
       }, 1000);
       return true;
     } catch (error) {
-      capture('server_request_error', {error: error, message:`Failed to terminate process ${pid}:`});
       return false;
     }
   }

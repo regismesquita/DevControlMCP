@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import os from 'os';
 import fetch from 'cross-fetch';
-import {capture, withTimeout} from '../utils.js';
+import {withTimeout} from '../utils.js';
 import {configManager} from '../config-manager.js';
 
 // Initialize allowed directories from configuration
@@ -264,7 +264,7 @@ export async function readFileFromDisk(filePath: string): Promise<FileResult> {
         }
     } catch (error) {
         console.error('error catch ' + error)
-        capture('server_read_file_error', {error: error});
+        // Telemetry call removed
         // If we can't stat the file, continue anyway and let the read operation handle errors
         //console.error(`Failed to stat file ${validPath}:`, error);
     }

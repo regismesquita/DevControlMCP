@@ -1,3 +1,16 @@
+# ⚠️ MODIFIED VERSION - PRIVACY ENHANCED ⚠️
+
+> **IMPORTANT DISCLAIMER**: This is a modified version of Desktop Commander MCP where **ALL telemetry and auto-update features have been removed using AI assistance**. No data is sent to external servers, and the software will not automatically update without your explicit permission.
+
+## The instructions below are for the original repo, to run this modified version:
+- Clone the repo 
+- cd to the folder 
+- run:  npm run setup
+
+
+> I am not a typescript programmer. If you are and can double check that all the telemetry is gone I will appreciate a lot. :)
+---
+
 # Desktop Commander MCP
 ### Search, update, manage files and run terminal commands with AI
 
@@ -61,12 +74,12 @@ First, ensure you've downloaded and installed the [Claude Desktop app](https://c
 ### Option 1: Install through npx
 Just run this in terminal
 ```
-npx @wonderwhy-er/desktop-commander@latest setup
+npx @wonderwhy-er/desktop-commander setup
 ```
 
 For debugging mode (allows Node.js inspector connection):
 ```
-npx @wonderwhy-er/desktop-commander@latest setup --debug
+npx @wonderwhy-er/desktop-commander setup --debug
 ```
 Restart Claude if running
 
@@ -124,9 +137,17 @@ The setup command will:
 
 ### Updating Desktop Commander
 
-When installed through npx (Option 1) or Smithery (Option 2), Desktop Commander will automatically update to the latest version whenever you restart Claude. No manual update process is needed.
+The auto-update feature has been disabled in this modified version. 
 
-For manual installations, you can update by running the setup command again.
+To update manually, you can run the setup command again with your desired version:
+```bash
+npx @wonderwhy-er/desktop-commander@<version> setup
+```
+
+For example, to install version 0.1.35:
+```bash
+npx @wonderwhy-er/desktop-commander@0.1.35 setup
+```
 
 ## Usage
 
@@ -253,7 +274,7 @@ If you need to debug the server, you can install it in debug mode:
 
 ```bash
 # Using npx
-npx @wonderwhy-er/desktop-commander@latest setup --debug
+npx @wonderwhy-er/desktop-commander setup --debug
 
 # Or if installed locally
 npm run setup:debug
@@ -385,7 +406,7 @@ Unlike IDE-focused tools, Claude Desktop Commander provides a solution-centric a
 No. This tool works with Claude Desktop's standard Pro subscription ($20/month), not with API calls, so you won't incur additional costs beyond the subscription fee.
 
 ### Does Desktop Commander automatically update?
-Yes, when installed through npx or Smithery, Desktop Commander automatically updates to the latest version when you restart Claude. No manual update process is needed.
+No, the auto-update functionality has been disabled in this version. You need to manually update by specifying the version you want to install.
 
 ### What are the most common use cases?
 - Exploring and understanding complex codebases
@@ -399,15 +420,23 @@ Join our [Discord server](https://discord.gg/kQ27sNnZr7) for community support, 
 
 ## Data Collection
 
-During installation and setup, Desktop Commander collects anonymous usage data to help improve the tool. This includes:
+**Note: This is a modified version of Desktop Commander where telemetry and auto-update features have been removed using AI assistance.**
+
+The original version of Desktop Commander collected anonymous usage data during installation and setup. This included:
 - Operating system information
 - Node.js and NPM versions
 - Installation method and shell environment
 - Error messages (if any occur during setup)
 
-This data is collected using Google Analytics analytics and is associated with a machine-generated unique ID. No personal information is collected. This helps us understand how the tool is being used and identify common issues.
+In this modified version:
+1. All Google Analytics telemetry has been disabled
+2. Machine ID tracking has been removed
+3. Auto-update functionality has been disabled
+4. All "calling home" behaviors have been eliminated
 
-We are currently working on adding a built-in opt-out option for this data collection in an upcoming release. For now, if you wish to opt out, you can block network connections to `google-analytics.com` in your firewall settings.
+These modifications ensure that the application does not send any data to external servers and remains under your complete control regarding updates.
+
+For those interested in the original functionality, the unmodified version can be found in the original repository.
 
 ## License
 

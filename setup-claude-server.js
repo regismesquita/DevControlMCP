@@ -5,219 +5,6 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { exec } from "node:child_process";
 import { version as nodeVersion } from 'process';
-import * as https from 'https';
-
-// Google Analytics configuration
-const GA_MEASUREMENT_ID = 'G-NGGDNL0K4L'; // Replace with your GA4 Measurement ID
-const GA_API_SECRET = '5M0mC--2S_6t94m8WrI60A';   // Replace with your GA4 API Secret
-const GA_BASE_URL = `https://www.google-analytics.com/mp/collect?measurement_id=${GA_MEASUREMENT_ID}&api_secret=${GA_API_SECRET}`;
-
-// Optional analytics - will gracefully degrade if dependencies aren't available
-let uniqueUserId = 'unknown';
-
-try {
-    // Only dependency is node-machine-id
-    const machineIdModule = await import('node-machine-id');
-  
-    // Get a unique user ID
-    uniqueUserId = machineIdModule.machineIdSync();
-} catch (error) {
-    // Fall back to a semi-unique identifier if machine-id is not available
-    uniqueUserId = `${platform()}-${process.env.USER || process.env.USERNAME || 'unknown'}-${Date.now()}`;
-}
-
-// Function to get npm version
-async function getNpmVersion() {
-  try {
-    return new Promise((resolve, reject) => {
-      exec('npm --version', (error, stdout, stderr) => {
-        if (error) {
-          resolve('unknown');
-          return;
-        }
-        resolve(stdout.trim());
-      });
-    });
-  } catch (error) {
-    return 'unknown';
-  }
-}
-
-const getVersion = async () => {
-    try {
-        const packageJson = await import('./package.json', { assert: { type: 'json' } });
-        return packageJson.default.version;
-    } catch {
-        return 'unknown'
-    }
-};
-
-// Function to detect shell environment
-function detectShell() {
-  // Check for Windows shells
-  if (process.platform === 'win32') {
-    if (process.env.TERM_PROGRAM === 'vscode') return 'vscode-terminal';
-    if (process.env.WT_SESSION) return 'windows-terminal';
-    if (process.env.SHELL?.includes('bash')) return 'git-bash';
-    if (process.env.TERM?.includes('xterm')) return 'xterm-on-windows';
-    if (process.env.ComSpec?.toLowerCase().includes('powershell')) return 'powershell';
-    if (process.env.PROMPT) return 'cmd';
-    
-    // WSL detection
-    if (process.env.WSL_DISTRO_NAME || process.env.WSLENV) {
-      return `wsl-${process.env.WSL_DISTRO_NAME || 'unknown'}`;
-    }
-
-    return 'windows-unknown';
-  }
-  
-  // Unix-based shells
-  if (process.env.SHELL) {
-    const shellPath = process.env.SHELL.toLowerCase();
-    if (shellPath.includes('bash')) return 'bash';
-    if (shellPath.includes('zsh')) return 'zsh';
-    if (shellPath.includes('fish')) return 'fish';
-    if (shellPath.includes('ksh')) return 'ksh';
-    if (shellPath.includes('csh')) return 'csh';
-    if (shellPath.includes('dash')) return 'dash';
-    return `other-unix-${shellPath.split('/').pop()}`;
-  }
-  
-  // Terminal emulators and IDE terminals
-  if (process.env.TERM_PROGRAM) {
-    return process.env.TERM_PROGRAM.toLowerCase();
-  }
-  
-  return 'unknown-shell';
-}
-
-// Function to determine execution context
-function getExecutionContext() {
-  // Check if running from npx
-  const isNpx = process.env.npm_lifecycle_event === 'npx' || 
-                process.env.npm_execpath?.includes('npx') ||
-                process.env._?.includes('npx') ||
-                import.meta.url.includes('node_modules');
-  
-  // Check if installed globally
-  const isGlobal = process.env.npm_config_global === 'true' ||
-                   process.argv[1]?.includes('node_modules/.bin');
-  
-  // Check if it's run from a script in package.json
-  const isNpmScript = !!process.env.npm_lifecycle_script;
-  
-  return {
-    runMethod: isNpx ? 'npx' : (isGlobal ? 'global' : (isNpmScript ? 'npm_script' : 'direct')),
-    isCI: !!process.env.CI || !!process.env.GITHUB_ACTIONS || !!process.env.TRAVIS || !!process.env.CIRCLECI,
-    shell: detectShell()
-  };
-}
-
-// Helper function to get standard environment properties for tracking
-let npmVersionCache = null;
-async function getTrackingProperties(additionalProps = {}) {
-  if (npmVersionCache === null) {
-    npmVersionCache = await getNpmVersion();
-  }
-  
-  const context = getExecutionContext();
-  const version = await getVersion();
-  return {
-    platform: platform(),
-    node_version: nodeVersion,
-    npm_version: npmVersionCache,
-    execution_context: context.runMethod,
-    is_ci: context.isCI,
-    shell: context.shell,
-    app_version: version,
-    engagement_time_msec: "100",
-    ...additionalProps
-  };
-}
-
-// Helper function for tracking that handles errors gracefully
-async function trackEvent(eventName, additionalProps = {}) {
-  if (!GA_MEASUREMENT_ID || !GA_API_SECRET) return; // Skip tracking if GA isn't configured
-  
-  try {
-    // Get enriched properties
-    const eventProperties = await getTrackingProperties(additionalProps);
-    
-    // Prepare GA4 payload
-    const payload = {
-      client_id: uniqueUserId,
-      non_personalized_ads: false,
-      timestamp_micros: Date.now() * 1000,
-      events: [{
-        name: eventName,
-        params: eventProperties
-      }]
-    };
-    
-    // Send to Google Analytics
-    const postData = JSON.stringify(payload);
-    
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData)
-      }
-    };
-    
-    return new Promise((resolve) => {
-      const req = https.request(GA_BASE_URL, options, (res) => {
-        // Optional response handling
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        
-        res.on('end', () => {
-          resolve(true);
-        });
-      });
-      
-      req.on('error', (error) => {
-        // Silently fail - we don't want tracking issues to break functionality
-        resolve(false);
-      });
-      
-      // Set timeout to prevent blocking
-      req.setTimeout(3000, () => {
-        req.destroy();
-        resolve(false);
-      });
-      
-      req.write(postData);
-      req.end();
-
-      // read response from request
-      req.on('response', (res) => {
-        // Optional response handling
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-
-        //response status
-        res.on('error', (error) => {
-          resolve(false);
-        });
-        
-        res.on('end', () => {
-          resolve(true);
-        });
-      });
-    });
-  } catch (error) {
-    logToFile(`Error tracking event ${eventName}: ${error}`, true);
-    // Silently fail if tracking fails - we don't want to break the application
-    return false;
-  }
-}
-// Initial tracking
-trackEvent('npx_setup_start');
 
 // Fix for Windows ESM path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -286,14 +73,13 @@ async function execAsync(command) {
 }
 
 async function restartClaude() {
-	try {
+    try {
         const platform = process.platform
         // ignore errors on windows when claude is not running.
         // just silently kill the process
         try  {
             switch (platform) {
                 case "win32":
-
                     await execAsync(
                         `taskkill /F /IM "Claude.exe"`,
                     )
@@ -310,7 +96,7 @@ async function restartClaude() {
                     break;
             }
         } catch {}
-		await new Promise((resolve) => setTimeout(resolve, 3000))
+        await new Promise((resolve) => setTimeout(resolve, 3000))
         try {
             if (platform === "win32") {
                 // it will never start claude
@@ -321,25 +107,19 @@ async function restartClaude() {
                 await execAsync(`claude`)
             }
             logToFile(`Claude has been restarted.`)
-        } catch{
-
+        } catch {
+            // Silent fail
         }
-
-		
-	} catch (error) {
-        await trackEvent('npx_setup_restart_claude_error', { error: error.message });
-		logToFile(`Failed to restart Claude: ${error}. Please restart it manually.`, true)
+    } catch (error) {
+        logToFile(`Failed to restart Claude: ${error}. Please restart it manually.`, true)
         logToFile(`If Claude Desktop is not installed use this link to download https://claude.ai/download`, true)
-	}
+    }
 }
 
 // Check if config file exists and create default if not
 if (!existsSync(claudeConfigPath)) {
     logToFile(`Claude config file not found at: ${claudeConfigPath}`);
     logToFile('Creating default config file...');
-    
-    // Track new installation
-    await trackEvent('npx_setup_create_default_config');
     
     // Create the directory if it doesn't exist
     const configDir = dirname(claudeConfigPath);
@@ -405,7 +185,7 @@ export default async function setup() {
                         isWindows ? 
                             join(process.env.APPDATA || '', "npm", "npx.cmd").replace(/\\/g, '\\\\') : 
                             "$(which npx)",
-                        "@wonderwhy-er/desktop-commander@latest"
+                        "@wonderwhy-er/desktop-commander"
                     ],
                     "env": debugEnv
                 };
@@ -434,7 +214,7 @@ export default async function setup() {
                 serverConfig = {
                     "command": isWindows ? "npx.cmd" : "npx",
                     "args": [
-                        "@wonderwhy-er/desktop-commander@latest"
+                        "@wonderwhy-er/desktop-commander"
                     ]
                 };
             } else {
@@ -465,7 +245,6 @@ export default async function setup() {
 
         // Write the updated config back
         writeFileSync(claudeConfigPath, JSON.stringify(config, null, 2), 'utf8');
-        await trackEvent('npx_setup_update_config');
         logToFile('Successfully added MCP server to Claude configuration!');
         logToFile(`Configuration location: ${claudeConfigPath}`);
         
@@ -477,10 +256,7 @@ export default async function setup() {
 
         await restartClaude();
         
-        await trackEvent('npx_setup_complete');
-        
     } catch (error) {
-        await trackEvent('npx_setup_final_error', { error: error.message });
         logToFile(`Error updating Claude configuration: ${error}`, true);
         process.exit(1);
     }

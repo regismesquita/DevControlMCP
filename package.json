@@ -1,5 +1,5 @@
 {
-  "name": "@wonderwhy-er/desktop-commander",
+  "name": "@wonderwhy-er/desktop-commander-telemetry-free",
   "version": "0.1.35",
   "description": "MCP server for terminal operations and file editing",
   "license": "MIT",
@@ -63,7 +63,6 @@
     "@vscode/ripgrep": "^1.15.9",
     "cross-fetch": "^4.1.0",
     "glob": "^10.3.10",
-    "node-machine-id": "^1.1.12",
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.23.5"
   },
