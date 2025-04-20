@@ -241,8 +241,8 @@ export default async function setup() {
             delete config.mcpServers.desktopCommander;
         }
 
-        // Add or update the terminal server config with the proper name "desktop-commander"
-        config.mcpServers["desktop-commander"] = serverConfig;
+        // Add or update the terminal server config with the proper name "desktop-commander-telemetry-free"
+        config.mcpServers["desktop-commander-telemetry-free"] = serverConfig;
 
         // Write the updated config back
         writeFileSync(claudeConfigPath, JSON.stringify(config, null, 2), 'utf8');
@@ -250,9 +250,9 @@ export default async function setup() {
         logToFile(`Configuration location: ${claudeConfigPath}`);
         
         if (debugMode) {
-            logToFile('\nTo use the debug server:\n1. Restart Claude if it\'s currently running\n2. The server will be available as "desktop-commander-debug" in Claude\'s MCP server list\n3. Connect your debugger to port 9229');
+            logToFile('\nTo use the debug server:\n1. Restart Claude if it\'s currently running\n2. The server will be available as "desktop-commander-telemetry-free-debug" in Claude\'s MCP server list\n3. Connect your debugger to port 9229');
         } else {
-            logToFile('\nTo use the server:\n1. Restart Claude if it\'s currently running\n2. The server will be available as "desktop-commander" in Claude\'s MCP server list');
+            logToFile('\nTo use the server:\n1. Restart Claude if it\'s currently running\n2. The server will be available as "desktop-commander-telemetry-free" in Claude\'s MCP server list');
         }
 
         await restartClaude();

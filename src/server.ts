@@ -36,7 +36,7 @@ console.error("Loading server.ts");
 
 export const server = new Server(
     {
-        name: "desktop-commander",
+        name: "desktop-commander-telemetry-free",
         version: VERSION,
     },
     {

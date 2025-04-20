@@ -1,6 +1,6 @@
 # ⚠️ MODIFIED VERSION - PRIVACY ENHANCED ⚠️
 
-> **IMPORTANT DISCLAIMER**: This is a modified version of Desktop Commander MCP where **ALL telemetry and auto-update features have been removed using AI assistance**. No data is sent to external servers, and the software will not automatically update without your explicit permission.
+> **IMPORTANT DISCLAIMER**: This is a modified version of Desktop Commander-Telemetry-Free MCP where **ALL telemetry and auto-update features have been removed using AI assistance**. No data is sent to external servers, and the software will not automatically update without your explicit permission.
 
 > I have renamed the package globally on the code from @wonderwhy-er/desktop-commander to  @wonderwhy-er/desktop-commander-telemetry-free to avoid accidentally calling the original telemetry-rich project , this new package doesn't exist, so any attempt to use it will fail, follow the steps below to actually install the software.
 
@@ -16,7 +16,7 @@
 
 ---
 
-# Desktop Commander MCP
+# Desktop Commander-Telemetry-Free MCP
 ### Search, update, manage files and run terminal commands with AI
 
 [![npm downloads](https://img.shields.io/npm/dw/@wonderwhy-er/desktop-commander-telemetry-free)](https://www.npmjs.com/package/@wonderwhy-er/desktop-commander-telemetry-free)
@@ -31,9 +31,9 @@
 Short version. Four key things. Terminal commands, diff based file editing, ripgrep based text search in folders, ability to read files from urls 
 
 
-![Desktop Commander MCP](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander/main/header.png)
+![Desktop Commander-Telemetry-Free MCP](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree/main/header.png)
 <a href="https://glama.ai/mcp/servers/zempur9oh4">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/zempur9oh4/badge" alt="Desktop Commander MCP" />
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/zempur9oh4/badge" alt="Desktop Commander-Telemetry-Free MCP" />
 </a>
 
 ## Table of Contents
@@ -89,7 +89,7 @@ npx @wonderwhy-er/desktop-commander-telemetry-free setup --debug
 Restart Claude if running
 
 ### Option 2: Using bash script installer (macOS)
-For macOS users, you can use our automated bash installer which will check your Node.js version, install it if needed, and automatically configure Desktop Commander:
+For macOS users, you can use our automated bash installer which will check your Node.js version, install it if needed, and automatically configure Desktop Commander-Telemetry-Free:
 ```
 curl -fsSL https://raw.githubusercontent.com/wonderwhy-er/DesktopCommanderMCP/refs/heads/main/install.sh | bash
 ```
@@ -97,7 +97,7 @@ This script handles all dependencies and configuration automatically for a seaml
 
 ### Option 3: Installing via Smithery
 
-To install Desktop Commander for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@wonderwhy-er/desktop-commander-telemetry-free):
+To install Desktop Commander-Telemetry-Free for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@wonderwhy-er/desktop-commander-telemetry-free):
 
 ```bash
 npx -y @smithery/cli install @wonderwhy-er/desktop-commander-telemetry-free --client claude
@@ -113,7 +113,7 @@ Add this entry to your claude_desktop_config.json:
 ```json
 {
   "mcpServers": {
-    "desktop-commander": {
+    "desktop-commander-telemetry-free": {
       "command": "npx",
       "args": [
         "-y",
@@ -140,7 +140,7 @@ The setup command will:
 - Configure Claude's desktop app
 - Add MCP servers to Claude's config if needed
 
-### Updating Desktop Commander
+### Updating Desktop Commander-Telemetry-Free
 
 The auto-update feature has been disabled in this modified version. 
 
@@ -288,7 +288,7 @@ npm run setup:debug
 ```
 
 This will:
-1. Configure Claude to use a separate "desktop-commander" server
+1. Configure Claude to use a separate "desktop-commander-telemetry-free" server
 2. Enable Node.js inspector protocol with `--inspect-brk=9229` flag
 3. Pause execution at the start until a debugger connects
 4. Enable additional debugging environment variables
@@ -352,7 +352,7 @@ Learn more about this project through these resources:
 [Claude with MCPs replaced Cursor & Windsurf. How did that happen?](https://wonderwhy-er.medium.com/claude-with-mcps-replaced-cursor-windsurf-how-did-that-happen-c1d1e2795e96) - A detailed exploration of how Claude with Model Context Protocol capabilities is changing developer workflows.
 
 ### Video
-[Claude Desktop Commander Video Tutorial](https://www.youtube.com/watch?v=ly3bed99Dy8) - Watch how to set up and use the Commander effectively.
+[Claude Desktop Commander-Telemetry-Free Video Tutorial](https://www.youtube.com/watch?v=ly3bed99Dy8) - Watch how to set up and use the Commander effectively.
 
 ### Publication at AnalyticsIndiaMag
 [![analyticsindiamag.png](testemonials%2Fanalyticsindiamag.png)
@@ -363,25 +363,25 @@ Join our [Discord server](https://discord.gg/kQ27sNnZr7) to get help, share feed
 
 ## Testimonials
 
-[![It's a life saver! I paid Claude + Cursor currently which I always feel it's kind of duplicated. This solves the problem ultimately. I am so happy. Thanks so much. Plus today Claude has added the web search support. With this MCP + Internet search, it writes the code with the latest updates. It's so good when Cursor doesn't work sometimes or all the fast requests are used.](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander/main/testemonials/img.png) https://www.youtube.com/watch?v=ly3bed99Dy8&lc=UgyyBt6_ShdDX_rIOad4AaABAg
+[![It's a life saver! I paid Claude + Cursor currently which I always feel it's kind of duplicated. This solves the problem ultimately. I am so happy. Thanks so much. Plus today Claude has added the web search support. With this MCP + Internet search, it writes the code with the latest updates. It's so good when Cursor doesn't work sometimes or all the fast requests are used.](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree/main/testemonials/img.png) https://www.youtube.com/watch?v=ly3bed99Dy8&lc=UgyyBt6_ShdDX_rIOad4AaABAg
 ](https://www.youtube.com/watch?v=ly3bed99Dy8&lc=UgyyBt6_ShdDX_rIOad4AaABAg
 )
 
-[![This is the first comment I've ever left on a youtube video, THANK YOU! I've been struggling to update an old Flutter app in Cursor from an old pre null-safety version to a current version and implemented null-safety using Claude 3.7. I got most of the way but had critical BLE errors that I spent days trying to resolve with no luck. I tried Augment Code but it didn't get it either. I implemented your MCP in Claude desktop and was able to compare the old and new codebase fully, accounting for the updates in the code, and fix the issues in a couple of hours. A word of advice to people trying this, be sure to stage changes and commit when appropriate to be able to undo unwanted changes. Amazing!](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander/main/testemonials/img_1.png)
+[![This is the first comment I've ever left on a youtube video, THANK YOU! I've been struggling to update an old Flutter app in Cursor from an old pre null-safety version to a current version and implemented null-safety using Claude 3.7. I got most of the way but had critical BLE errors that I spent days trying to resolve with no luck. I tried Augment Code but it didn't get it either. I implemented your MCP in Claude desktop and was able to compare the old and new codebase fully, accounting for the updates in the code, and fix the issues in a couple of hours. A word of advice to people trying this, be sure to stage changes and commit when appropriate to be able to undo unwanted changes. Amazing!](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree/main/testemonials/img_1.png)
 https://www.youtube.com/watch?v=ly3bed99Dy8&lc=UgztdHvDMqTb9jiqnf54AaABAg](https://www.youtube.com/watch?v=ly3bed99Dy8&lc=UgztdHvDMqTb9jiqnf54AaABAg
 )
 
 [![Great! I just used Windsurf, bought license a week ago, for upgrading old fullstack socket project and it works many times good or ok but also many times runs away in cascade and have to revert all changes losing hundereds of cascade tokens. In just a week down to less than 100 tokens and do not want to buy only 300 tokens for 10$. This Claude MCP ,bought claude Pro finally needed but wanted very good reason to also have next to ChatGPT, and now can code as much as I want not worrying about token cost.
-Also this is much more than code editing it is much more thank you for great video!](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander/main/testemonials/img_2.png)
+Also this is much more than code editing it is much more thank you for great video!](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree/main/testemonials/img_2.png)
 https://www.youtube.com/watch?v=ly3bed99Dy8&lc=UgyQFTmYLJ4VBwIlmql4AaABAg](https://www.youtube.com/watch?v=ly3bed99Dy8&lc=UgyQFTmYLJ4VBwIlmql4AaABAg)
 
-[![it is a great tool, thank you, I like using it, as it gives claude an ability to do surgical edits, making it more like a human developer.](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander/main/testemonials/img_3.png)
+[![it is a great tool, thank you, I like using it, as it gives claude an ability to do surgical edits, making it more like a human developer.](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree/main/testemonials/img_3.png)
 https://www.youtube.com/watch?v=ly3bed99Dy8&lc=Ugy4-exy166_Ma7TH-h4AaABAg](https://www.youtube.com/watch?v=ly3bed99Dy8&lc=Ugy4-exy166_Ma7TH-h4AaABAg)
 
 [![You sir are my hero. You've pretty much summed up and described my experiences of late, much better than I could have. Cursor and Windsurf both had me frustrated to the point where I was almost yelling at my computer screen. Out of whimsy, I thought to myself why not just ask Claude directly, and haven't looked back since.
 Claude first to keep my sanity in check, then if necessary, engage with other IDEs, frameworks, etc. I thought I was the only one, glad to see I'm not lol.
 33
-1](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander/main/testemonials/img_4.png)
+1](https://raw.githubusercontent.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree/main/testemonials/img_4.png)
 https://medium.com/@pharmx/you-sir-are-my-hero-62cff5836a3e](https://medium.com/@pharmx/you-sir-are-my-hero-62cff5836a3e)
 
 ## Contributing
@@ -407,12 +407,12 @@ Here are answers to some common questions. For a more comprehensive FAQ, see our
 It's an MCP tool that enables Claude Desktop to access your file system and terminal, turning Claude into a versatile assistant for coding, automation, codebase exploration, and more.
 
 ### How is this different from Cursor/Windsurf?
-Unlike IDE-focused tools, Claude Desktop Commander provides a solution-centric approach that works with your entire OS, not just within a coding environment. Claude reads files in full rather than chunking them, can work across multiple projects simultaneously, and executes changes in one go rather than requiring constant review.
+Unlike IDE-focused tools, Claude Desktop Commander-Telemetry-Free provides a solution-centric approach that works with your entire OS, not just within a coding environment. Claude reads files in full rather than chunking them, can work across multiple projects simultaneously, and executes changes in one go rather than requiring constant review.
 
 ### Do I need to pay for API credits?
 No. This tool works with Claude Desktop's standard Pro subscription ($20/month), not with API calls, so you won't incur additional costs beyond the subscription fee.
 
-### Does Desktop Commander automatically update?
+### Does Desktop Commander-Telemetry-Free automatically update?
 No, the auto-update functionality has been disabled in this version. You need to manually update by specifying the version you want to install.
 
 ### What are the most common use cases?
@@ -427,9 +427,9 @@ Join our [Discord server](https://discord.gg/kQ27sNnZr7) for community support, 
 
 ## Data Collection
 
-**Note: This is a modified version of Desktop Commander where telemetry and auto-update features have been removed using AI assistance.**
+**Note: This is a modified version of Desktop Commander-Telemetry-Free where telemetry and auto-update features have been removed using AI assistance.**
 
-The original version of Desktop Commander collected anonymous usage data during installation and setup. This included:
+The original version of Desktop Commander-Telemetry-Free collected anonymous usage data during installation and setup. This included:
 - Operating system information
 - Node.js and NPM versions
 - Installation method and shell environment
