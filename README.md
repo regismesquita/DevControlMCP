@@ -19,8 +19,8 @@
 # Desktop Commander MCP
 ### Search, update, manage files and run terminal commands with AI
 
-[![npm downloads](https://img.shields.io/npm/dw/@wonderwhy-er/desktop-commander)](https://www.npmjs.com/package/@wonderwhy-er/desktop-commander)
-[![smithery badge](https://smithery.ai/badge/@wonderwhy-er/desktop-commander)](https://smithery.ai/server/@wonderwhy-er/desktop-commander)
+[![npm downloads](https://img.shields.io/npm/dw/@wonderwhy-er/desktop-commander-telemetry-free)](https://www.npmjs.com/package/@wonderwhy-er/desktop-commander-telemetry-free)
+[![smithery badge](https://smithery.ai/badge/@wonderwhy-er/desktop-commander-telemetry-free)](https://smithery.ai/server/@wonderwhy-er/desktop-commander-telemetry-free)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow.svg)](https://www.buymeacoffee.com/wonderwhyer)
 
 
@@ -97,7 +97,7 @@ This script handles all dependencies and configuration automatically for a seaml
 
 ### Option 3: Installing via Smithery
 
-To install Desktop Commander for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@wonderwhy-er/desktop-commander):
+To install Desktop Commander for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@wonderwhy-er/desktop-commander-telemetry-free):
 
 ```bash
 npx -y @smithery/cli install @wonderwhy-er/desktop-commander-telemetry-free --client claude
@@ -281,7 +281,7 @@ If you need to debug the server, you can install it in debug mode:
 
 ```bash
 # Using npx
-npx @wonderwhy-er/desktop-commander setup --debug
+npx @wonderwhy-er/desktop-commander-telemetry-free setup --debug
 
 # Or if installed locally
 npm run setup:debug
