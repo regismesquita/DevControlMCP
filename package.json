@@ -16,7 +16,6 @@
   },
   "files": [
     "dist",
-    "logo.png",
     "testemonials"
   ],
   "scripts": {
