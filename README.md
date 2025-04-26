@@ -1,6 +1,8 @@
+**Before we start: This thing can completely destroy your system, files , projects and even worse... so be careful. By default this thing has permission to do whatever it wants on your computer.**
+
 # DevControlMCP
 
-> **IMPORTANT NOTE**: This project was originally based on the wonderwhy-er/Desktop Commander project. It started as a telemetry-free version and has been transformed into a full fork with additional features and improvements.
+> **IMPORTANT NOTE**: This project is originally based on the [wonderwhy-er/DesktopCommanderMCP](https://github.com/wonderwhy-er/DesktopCommanderMCP) project. It started as a telemetry-free version and has been transformed into a full fork, the main difference is that it is telemetry free and the license will always be MIT. no new features or anything, actually we will probably be behind the main version and we may strip some features down to keep the bare minimum and avoid tool bloating.  but no telmetry. no license change.
 
 ## Overview
 
@@ -22,30 +24,6 @@ DevControlMCP is an MCP (Model Context Protocol) tool that enables Claude deskto
 - Claude Desktop app with Pro subscription
 
 ### Quick Install
-```bash
-npx @regismesquita/DevControlMCP setup
-```
-
-For debugging mode:
-```bash
-npx @regismesquita/DevControlMCP setup --debug
-```
-
-### Manual Configuration
-Add to your claude_desktop_config.json:
-```json
-{
-  "mcpServers": {
-    "DevControlMCP": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@regismesquita/DevControlMCP"
-      ]
-    }
-  }
-}
-```
 
 ### Local Installation
 ```bash
@@ -93,7 +71,12 @@ new content
 - Set `allowedDirectories` to control filesystem access
 - Be cautious when running terminal commands as they have full access to your system
 - Use a separate chat for configuration changes
+- This thing can completely destroy your system, files , projects and even worse... so be careful. By default this thing has permission to do whatever it wants on your computer.
 
 ## License
 
-MIT
+This project is licensed under the MIT License.
+
+Original work by Eduard Ruzga.
+
+Modifications (Mostly removal of stuff) starting from commit 3bdaa965b4a77f64a9f8b751680bd1d90e651851 by RDSM.
