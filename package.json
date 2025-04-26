@@ -1,17 +1,17 @@
 {
-  "name": "@wonderwhy-er/desktop-commander-telemetry-free",
+  "name": "@regismesquita/DevControlMCP",
   "version": "0.1.35",
   "description": "MCP server for terminal operations and file editing",
   "license": "MIT",
-  "author": "Eduards Ruzga",
-  "homepage": "https://github.com/wonderwhy-er/DesktopCommanderMCP",
-  "bugs": "https://github.com/wonderwhy-er/DesktopCommanderMCP/issues",
+  "author": "Regis Mesquita",
+  "homepage": "https://github.com/regismesquita/DevControlMCP",
+  "bugs": "https://github.com/regismesquita/DevControlMCP/issues",
   "type": "module",
   "engines": {
     "node": ">=18.0.0"
   },
   "bin": {
-    "desktop-commander-telemetry-free": "dist/index.js",
+    "DevControlMCP": "dist/index.js",
     "setup": "dist/setup-claude-server.js"
   },
   "files": [

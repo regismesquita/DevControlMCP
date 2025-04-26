@@ -20,6 +20,6 @@ export class FilteredStdioServerTransport extends StdioServerTransport {
     super();
     
     // Log initialization to stderr to avoid polluting the JSON stream
-    process.stderr.write(`[desktop-commander-telemetry-free] Initialized FilteredStdioServerTransport\n`);
+    process.stderr.write(`[DevControlMCP] Initialized FilteredStdioServerTransport\n`);
   }
 }

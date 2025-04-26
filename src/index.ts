@@ -65,11 +65,11 @@ async function runServer() {
 
       // If this is a JSON parsing error, log it to stderr but don't crash
       if (errorMessage.includes('JSON') && errorMessage.includes('Unexpected token')) {
-        process.stderr.write(`[desktop-commander-telemetry-free] JSON parsing error: ${errorMessage}\n`);
+        process.stderr.write(`[DevControlMCP] JSON parsing error: ${errorMessage}\n`);
         return; // Don't exit on JSON parsing errors
       }
 
-      process.stderr.write(`[desktop-commander-telemetry-free] Uncaught exception: ${errorMessage}\n`);
+      process.stderr.write(`[DevControlMCP] Uncaught exception: ${errorMessage}\n`);
       process.exit(1);
     });
 
@@ -79,11 +79,11 @@ async function runServer() {
 
       // If this is a JSON parsing error, log it to stderr but don't crash
       if (errorMessage.includes('JSON') && errorMessage.includes('Unexpected token')) {
-        process.stderr.write(`[desktop-commander-telemetry-free] JSON parsing rejection: ${errorMessage}\n`);
+        process.stderr.write(`[DevControlMCP] JSON parsing rejection: ${errorMessage}\n`);
         return; // Don't exit on JSON parsing errors
       }
 
-      process.stderr.write(`[desktop-commander-telemetry-free] Unhandled rejection: ${errorMessage}\n`);
+      process.stderr.write(`[DevControlMCP] Unhandled rejection: ${errorMessage}\n`);
       process.exit(1);
     });
 

@@ -1,30 +1,28 @@
 # Frequently Asked Questions (FAQ)
 
-This document provides answers to the most commonly asked questions about Claude Desktop Commander-Telemetry-Free (also known as ClaudeComputerCommander-TelemetryFree). If you can't find an answer to your question here, please join our [Discord server](https://discord.gg/kQ27sNnZr7) for additional support or [open a GitHub issue](https://github.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree/issues/new).
-
-> **Note**: For a more user-friendly version of this FAQ, visit our [website FAQ section](https://desktopcommander.app#faq).
+This document provides answers to the most commonly asked questions about DevControlMCP. If you can't find an answer to your question here, please check the [GitHub issues](https://github.com/regismesquita/DevControlMCP/issues) for known problems or [open a new issue](https://github.com/regismesquita/DevControlMCP/issues/new) with details about your question.
 
 ## Table of Contents
 
 - [General Information](#general-information)
-  - [What is Claude Desktop Commander-Telemetry-Free?](#what-is-claude-desktop-commander-telemetry-free-telemetry-free)
+  - [What is DevControlMCP?](#what-is-devcontrolmcp)
   - [How does it differ from coding tools like Cursor or Windsurf?](#how-does-it-differ-from-coding-tools-like-cursor-or-windsurf)
   - [What is an MCP?](#what-is-an-mcp)
   - [Is this an official Anthropic product?](#is-this-an-official-anthropic-product)
 
 - [Cost & Value](#cost--value)
-  - [How much does it cost to use Claude Desktop Commander-Telemetry-Free?](#how-much-does-it-cost-to-use-claude-desktop-commander-telemetry-free-telemetry-free)
+  - [How much does it cost to use Claude DevControlMCP?](#how-much-does-it-cost-to-use-claude-DevControlMCP)
   - [How does the pricing compare to Claude Code or other AI coding tools?](#how-does-the-pricing-compare-to-claude-code-or-other-ai-coding-tools)
   - [Do I need API credits to use this tool?](#do-i-need-api-credits-to-use-this-tool)
 
 - [Installation & Setup](#installation--setup)
-  - [What are the prerequisites for using Claude Desktop Commander-Telemetry-Free?](#what-are-the-prerequisites-for-using-claude-desktop-commander-telemetry-free-telemetry-free)
-  - [How do I install Claude Desktop Commander-Telemetry-Free?](#how-do-i-install-claude-desktop-commander-telemetry-free-telemetry-free)
+  - [What are the prerequisites for using Claude DevControlMCP?](#what-are-the-prerequisites-for-using-claude-DevControlMCP)
+  - [How do I install Claude DevControlMCP?](#how-do-i-install-claude-DevControlMCP)
   - [How do I update to the latest version?](#how-do-i-update-to-the-latest-version)
   - [Which operating systems does it support?](#which-operating-systems-does-it-support)
 
 - [Features & Capabilities](#features--capabilities)
-  - [What can I do with Claude Desktop Commander-Telemetry-Free?](#what-can-i-do-with-claude-desktop-commander-telemetry-free-telemetry-free)
+  - [What can I do with Claude DevControlMCP?](#what-can-i-do-with-claude-DevControlMCP)
   - [How does it handle file editing?](#how-does-it-handle-file-editing)
   - [Can it help me understand complex codebases?](#can-it-help-me-understand-complex-codebases)
   - [How does it handle long-running commands?](#how-does-it-handle-long-running-commands)
@@ -58,19 +56,19 @@ This document provides answers to the most commonly asked questions about Claude
 
 ## General Information
 
-### What is Claude Desktop Commander-Telemetry-Free?
+### What is DevControlMCP?
 
-Claude Desktop Commander-Telemetry-Free is an MCP (Model Context Protocol) tool that allows Claude Desktop to access and control your computer's file system and terminal. It enables Claude to explore, read, and write files, execute commands, and manage processes - expanding Claude's capabilities beyond just conversation to become a comprehensive assistant that can work with your entire operating system.
+DevControlMCP is an MCP (Model Context Protocol) tool that allows Claude Desktop to access and control your computer's file system and terminal. It enables Claude to explore, read, and write files, execute commands, and manage processes - expanding Claude's capabilities beyond just conversation to become a comprehensive assistant that can work with your entire operating system.
 
 ### How does it differ from coding tools like Cursor or Windsurf?
 
-Unlike tools like Cursor or Windsurf which are primarily designed as coding IDEs, Claude Desktop Commander-Telemetry-Free works with Claude to provide a more flexible, solution-centric approach. It's not confined to a coding box - it can handle coding tasks but also excels at exploring codebases, drawing diagrams, running automation processes, and working with multiple projects simultaneously.
+Unlike tools like Cursor or Windsurf which are primarily designed as coding IDEs, DevControlMCP works with Claude to provide a more flexible, solution-centric approach. It's not confined to a coding box - it can handle coding tasks but also excels at exploring codebases, drawing diagrams, running automation processes, and working with multiple projects simultaneously.
 
 The main differences:
 - Claude reads full files during exploration, ensuring it captures the complete structure
 - Coding tools like Windsurf & Cursor chunk and index files, sometimes missing key relationships
 - Claude generates and displays diagrams directly in chat
-- Claude Desktop Commander-Telemetry-Free allows you to work across your entire system, not just within coding environments
+- Claude DevControlMCP allows you to work across your entire system, not just within coding environments
 - Claude lets you execute the changes in one go, rather than requiring constant review and approval
 
 ### What is an MCP?
@@ -79,17 +77,17 @@ MCP stands for Model Context Protocol. It's a framework that allows AI language 
 
 ### Is this an official Anthropic product?
 
-No, Claude Desktop Commander-Telemetry-Free is an independent, open-source project developed by Eduard Ruzga and other contributors. It's not an official Anthropic product, though it works with Anthropic's Claude Desktop application.
+No, DevControlMCP is an independent, open-source project. It is a fork of the DevControlMCP MCP project originally created by Eduards Ruzga, but this fork is maintained by Regis Mesquita. It's not an official Anthropic product, though it works with Anthropic's Claude Desktop application.
 
 ## Cost & Value
 
-### How much does it cost to use Claude Desktop Commander-Telemetry-Free?
+### How much does it cost to use DevControlMCP?
 
-Claude Desktop Commander-Telemetry-Free itself is free and open-source. However, to use it, you need a Claude Pro subscription, which costs $20/month. There are no additional charges beyond this subscription fee.
+DevControlMCP itself is free and open-source. However, to use it, you need a Claude Pro subscription, which costs $20/month. There are no additional charges beyond this subscription fee.
 
 ### How does the pricing compare to Claude Code or other AI coding tools?
 
-Claude Desktop Commander-Telemetry-Free with Claude Pro is generally more cost-effective than alternatives:
+DevControlMCP with Claude Pro is generally more cost-effective than alternatives:
 - It costs a flat $20/month (Claude Pro subscription)
 - Claude Code uses an API with per-token pricing, which users report can quickly become expensive (some report spending hundreds of dollars)
 - Tools like Cursor or Windsurf have their own subscription costs that may be in addition to other AI services
@@ -98,51 +96,46 @@ Many users find the flat fee approach more predictable and often more affordable
 
 ### Do I need API credits to use this tool?
 
-No. Claude Desktop Commander-Telemetry-Free works with the Claude Desktop application's standard Pro subscription, not with API calls. You won't incur additional costs beyond the Claude Pro subscription fee.
+No. DevControlMCP works with the Claude Desktop application's standard Pro subscription, not with API calls. You won't incur additional costs beyond the Claude Pro subscription fee.
 
 ## Installation & Setup
 
-### What are the prerequisites for using Claude Desktop Commander-Telemetry-Free?
+### What are the prerequisites for using DevControlMCP?
 
 You'll need:
 - Node.js version 18 or higher installed on your system
 - Claude Desktop installed and running
 - A Claude Pro subscription ($20/month)
 
-### How do I install Claude Desktop Commander-Telemetry-Free?
+### How do I install DevControlMCP?
 
 There are several ways to install:
 
-**Option 1: Via Smithery**
+**Option 1: Direct installation**
 ```bash
-npx -y @smithery/cli install @wonderwhy-er/desktop-commander-telemetry-free --client claude
+npx @regismesquita/DevControlMCP setup
 ```
 
-**Option 2: Direct installation**
-```bash
-npx @wonderwhy-er/desktop-commander-telemetry-free setup
-```
-
-**Option 3: Manual configuration**
+**Option 2: Manual configuration**
 Add the MCP server to your claude_desktop_config.json (on Mac, found at ~/Library/Application\ Support/Claude/claude_desktop_config.json):
 ```json
 {
   "mcpServers": {
-    "desktop-commander-telemetry-free": {
+    "DevControlMCP": {
       "command": "npx",
       "args": [
         "-y",
-        "@wonderwhy-er/desktop-commander-telemetry-free"
+        "@regismesquita/DevControlMCP"
       ]
     }
   }
 }
 ```
 
-**Option 4: Local installation**
+**Option 3: Local installation**
 ```bash
-git clone https://github.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree.git
-cd ClaudeComputerCommander-TelemetryFree
+git clone https://github.com/regismesquita/DevControlMCP.git
+cd DevControlMCP
 npm run setup
 ```
 
@@ -150,13 +143,21 @@ After installation, restart Claude Desktop to see the new tools.
 
 ### How do I update to the latest version?
 
-In most cases, simply restarting Claude should be enough, as it uses npx which checks for and installs new versions automatically. If you're having issues, you can run the installation command again, which will update to the latest version.
+To update manually, you can run the setup command again with your desired version:
+```bash
+npx @regismesquita/DevControlMCP@<version> setup
+```
+
+For example, to install version 0.1.35:
+```bash
+npx @regismesquita/DevControlMCP@0.1.35 setup
+```
 
 Make sure you have Node.js version 18 or higher installed, as older versions may cause issues with the update process.
 
 ### Which operating systems does it support?
 
-Claude Desktop Commander-Telemetry-Free works with:
+Claude DevControlMCP works with:
 - Windows (ongoing improvements for better Windows support)
 - macOS
 - Linux (with ongoing enhancements for various distributions)
@@ -165,7 +166,7 @@ Work is in progress to improve WSL (Windows Subsystem for Linux) integration and
 
 ## Features & Capabilities
 
-### What can I do with Claude Desktop Commander-Telemetry-Free?
+### What can I do with DevControlMCP?
 
 The tool enables a wide range of tasks:
 
@@ -191,7 +192,7 @@ The tool enables a wide range of tasks:
 
 ### How does it handle file editing and URL content?
 
-Claude Desktop Commander-Telemetry-Free provides two main approaches to file editing and supports URL content:
+DevControlMCP provides two main approaches to file editing and supports URL content:
 
 1. **Surgical text replacements (`edit_block`):**
    - Best for small changes (<20% of file size)
@@ -231,7 +232,7 @@ This makes it particularly useful for onboarding to new projects or reviewing un
 
 ### How does it handle long-running commands and searches?
 
-Claude Desktop Commander-Telemetry-Free has a sophisticated system for managing commands and operations that may take a while to complete:
+Claude DevControlMCP has a sophisticated system for managing commands and operations that may take a while to complete:
 
 1. The `execute_command` function returns after a timeout with initial output
 2. The command continues running in the background
@@ -248,7 +249,7 @@ This allows Claude to manage processes that would normally exceed conversation t
 
 ### Can I use it for non-coding tasks?
 
-Absolutely. While it excels at coding-related tasks, Claude Desktop Commander-Telemetry-Free can be used for many system tasks:
+Absolutely. While it excels at coding-related tasks, Claude DevControlMCP can be used for many system tasks:
 - File organization and management
 - Media processing (video compression, image conversion)
 - System monitoring and maintenance
@@ -259,7 +260,7 @@ Absolutely. While it excels at coding-related tasks, Claude Desktop Commander-Te
 
 ### Is it safe to give Claude access to my file system?
 
-Claude Desktop Commander-Telemetry-Free operates within certain safety boundaries:
+Claude DevControlMCP operates within certain safety boundaries:
 
 - While file restrictions are currently disabled, Claude typically only works with files in folders you specifically direct it to
 - Claude can only perform actions that your user account has permission to do
@@ -269,11 +270,11 @@ Claude Desktop Commander-Telemetry-Free operates within certain safety boundarie
 
 ### Can I control which directories Claude can access?
 
-Recent updates have removed path limitations, and work is in progress to add configuration options that will allow you to specify which directories the tool can access. This feature is being developed in [PR #16](https://github.com/wonderwhy-er/ClaudeDesktopCommander/pull/16).
+Recent updates have removed path limitations, and work is in progress to add configuration options that will allow you to specify which directories the tool can access. This feature is being developed in [PR #16](https://github.com/regismesquita/DevControlMCP/pull/16).
 
 ### What commands are blocked by default?
 
-Claude Desktop Commander-Telemetry-Free doesn't have a pre-defined blocklist, but you can use the `block_command` and `unblock_command` functions to manage which commands Claude can execute. It's recommended to block commands that could potentially be destructive, such as `rm -rf` or `format`.
+Claude DevControlMCP doesn't have a pre-defined blocklist, but you can use the `block_command` and `unblock_command` functions to manage which commands Claude can execute. It's recommended to block commands that could potentially be destructive, such as `rm -rf` or `format`.
 
 ## Usage Scenarios
 
@@ -289,7 +290,7 @@ For extremely large monorepo projects, you may need to direct Claude to specific
 
 ### Can it work with multiple repositories simultaneously?
 
-Yes, one of Claude Desktop Commander-Telemetry-Free's strengths is its ability to work across different projects or repositories at the same time. This is particularly useful for:
+Yes, one of Claude DevControlMCP's strengths is its ability to work across different projects or repositories at the same time. This is particularly useful for:
 - Migrating features between codebases
 - Comparing implementations
 - Applying consistent changes across multiple projects
@@ -297,16 +298,16 @@ Yes, one of Claude Desktop Commander-Telemetry-Free's strengths is its ability t
 
 ### Is it suitable for non-technical users?
 
-Claude Desktop Commander-Telemetry-Free requires some basic technical knowledge, particularly:
+Claude DevControlMCP requires some basic technical knowledge, particularly:
 - Understanding of file systems
 - Basic terminal/command line knowledge
 - Ability to install and configure Node.js applications
 
-For complete beginners, platforms like Loveable might be easier as they handle deployment and server-side aspects. However, if you're comfortable with basic technical concepts and want more control, Claude Desktop Commander-Telemetry-Free can be a good option, especially if you've had issues with other platforms.
+For complete beginners, platforms like Loveable might be easier as they handle deployment and server-side aspects. However, if you're comfortable with basic technical concepts and want more control, Claude DevControlMCP can be a good option, especially if you've had issues with other platforms.
 
 ## Troubleshooting
 
-Before diving into specific issues, check the [GitHub issues page](https://github.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree/issues) to see if your problem has already been reported and if there are any solutions or workarounds. If you discover a new issue, please consider [opening a GitHub issue](https://github.com/wonderwhy-er/ClaudeComputerCommander-TelemetryFree/issues/new) to help improve the tool for everyone.
+Before diving into specific issues, check the [GitHub issues page](https://github.com/regismesquita/DevControlMCP/issues) to see if your problem has already been reported and if there are any solutions or workarounds. If you discover a new issue, please consider [opening a GitHub issue](https://github.com/regismesquita/DevControlMCP/issues/new) to help improve the tool for everyone.
 
 ### Claude says it doesn't have permission to access my files/directories
 
@@ -328,15 +329,15 @@ Claude Desktop has certain limits on message size. When working with large codeb
 
 ### Installation fails on my system
 
-If you're having trouble installing Claude Desktop Commander-Telemetry-Free:
+If you're having trouble installing Claude DevControlMCP:
 
 1. Check Node.js version: `node -v` (should be v18 or higher)
 2. Ensure you have proper permissions to install npm packages
 3. On Windows, try running your terminal as Administrator
 4. Check if there are any specific errors in the installation output
-5. Try the manual installation method (Option 4 in the installation instructions)
+5. Try the manual installation method (Option 3 in the installation instructions)
 
-For persistent issues, join the [Discord community](https://discord.gg/kQ27sNnZr7) for assistance.
+For persistent issues, create an issue on the [GitHub repository](https://github.com/regismesquita/DevControlMCP/issues/new).
 
 ## Best Practices
 
@@ -367,7 +368,7 @@ To ensure you don't lose important work:
 
 ### Should I still use a code editor?
 
-Yes, for most users, having a code editor is still valuable. Claude Desktop Commander-Telemetry-Free works well alongside traditional development tools, rather than completely replacing them.
+Yes, for most users, having a code editor is still valuable. Claude DevControlMCP works well alongside traditional development tools, rather than completely replacing them.
 
 Typical workflow:
 1. Use Claude to implement changes or explore code
@@ -384,7 +385,7 @@ Some users report reviewing code only after Claude has made it work, focusing on
 
 Tools like Cline are great options that integrate directly with VSCode. The main differences are:
 
-**Claude Desktop Commander-Telemetry-Free:**
+**Claude DevControlMCP:**
 - Works across your entire system, not just within the editor
 - Can handle automation, terminal commands, and long-running processes
 - Fixed cost with Claude Pro subscription
@@ -401,9 +402,9 @@ Many users employ both, using the right tool for different tasks.
 
 ### Is this better than using Jupyter notebooks with Claude?
 
-Jupyter notebooks and Claude Desktop Commander-Telemetry-Free serve different purposes:
+Jupyter notebooks and Claude DevControlMCP serve different purposes:
 
-**Claude Desktop Commander-Telemetry-Free:**
+**Claude DevControlMCP:**
 - System-wide access to files and terminal
 - Can work with any project type or language
 - Full development workflow support
@@ -415,4 +416,4 @@ Jupyter notebooks and Claude Desktop Commander-Telemetry-Free serve different pu
 - Visual output for data visualization
 - More structured for educational purposes
 
-For data science or analysis projects, you might use both: Claude Desktop Commander-Telemetry-Free for system tasks and code management, and Jupyter for interactive exploration and visualization.
+For data science or analysis projects, you might use both: Claude DevControlMCP for system tasks and code management, and Jupyter for interactive exploration and visualization.

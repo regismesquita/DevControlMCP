@@ -1,6 +1,6 @@
 {
-  "name": "Desktop Commander MCP",
-  "short_name": "Desktop Commander",
+  "name": "DevControlMCP",
+  "short_name": "DevControlMCP",
   "icons": [
     {
       "src": "web-app-manifest-192x192.png",

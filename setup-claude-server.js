@@ -185,7 +185,7 @@ export default async function setup() {
                         isWindows ? 
                             join(process.env.APPDATA || '', "npm", "npx.cmd").replace(/\\/g, '\\\\') : 
                             "$(which npx)",
-                        "@wonderwhy-er/desktop-commander-telemetry-free"
+                        "@regismesquita/DevControlMCP"
                     ],
                     "env": debugEnv
                 };
@@ -214,9 +214,8 @@ export default async function setup() {
                 serverConfig = {
                     "command": isWindows ? "npx.cmd" : "npx",
                     "args": [
-                        "@wonderwhy-er/desktop-commander-telemetry-free"
-                    ],
-                    "comment": "NOTE: Using telemetry-free version to prevent accidental updates to versions with telemetry"
+                        "@regismesquita/DevControlMCP"
+                    ]
                 };
             } else {
                 // For local installation, use absolute path to handle Windows properly
@@ -235,14 +234,17 @@ export default async function setup() {
             config.mcpServers = {};
         }
 
-        // Check if the old "desktopCommander" exists and remove it
-        if (config.mcpServers.desktopCommander) {
-            logToFile('Found old "desktopCommander" installation. Removing it...');
-            delete config.mcpServers.desktopCommander;
+        // Check if any old servers exist and remove them
+        const oldServers = ["desktopCommander", "desktop-commander-telemetry-free"];
+        for (const oldServer of oldServers) {
+            if (config.mcpServers[oldServer]) {
+                logToFile(`Found old "${oldServer}" installation. Removing it...`);
+                delete config.mcpServers[oldServer];
+            }
         }
 
-        // Add or update the terminal server config with the proper name "desktop-commander-telemetry-free"
-        config.mcpServers["desktop-commander-telemetry-free"] = serverConfig;
+        // Add or update the terminal server config with the proper name "DevControlMCP"
+        config.mcpServers["DevControlMCP"] = serverConfig;
 
         // Write the updated config back
         writeFileSync(claudeConfigPath, JSON.stringify(config, null, 2), 'utf8');
@@ -250,9 +252,9 @@ export default async function setup() {
         logToFile(`Configuration location: ${claudeConfigPath}`);
         
         if (debugMode) {
-            logToFile('\nTo use the debug server:\n1. Restart Claude if it\'s currently running\n2. The server will be available as "desktop-commander-telemetry-free-debug" in Claude\'s MCP server list\n3. Connect your debugger to port 9229');
+            logToFile('\nTo use the debug server:\n1. Restart Claude if it\'s currently running\n2. The server will be available as "DevControlMCP-debug" in Claude\'s MCP server list\n3. Connect your debugger to port 9229');
         } else {
-            logToFile('\nTo use the server:\n1. Restart Claude if it\'s currently running\n2. The server will be available as "desktop-commander-telemetry-free" in Claude\'s MCP server list');
+            logToFile('\nTo use the server:\n1. Restart Claude if it\'s currently running\n2. The server will be available as "DevControlMCP" in Claude\'s MCP server list');
         }
 
         await restartClaude();

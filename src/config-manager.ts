@@ -23,7 +23,7 @@ class ConfigManager {
     // Get user's home directory
     const homeDir = os.homedir();
     // Define config directory and file paths
-    const configDir = path.join(homeDir, '.claude-server-commander');
+    const configDir = path.join(homeDir, '.devcontrol-mcp');
     this.configPath = path.join(configDir, 'config.json');
   }
 

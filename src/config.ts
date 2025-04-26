@@ -4,7 +4,7 @@ import os from 'os';
 
 // Use user's home directory for configuration files
 const USER_HOME = os.homedir();
-const CONFIG_DIR = path.join(USER_HOME, '.claude-server-commander');
+const CONFIG_DIR = path.join(USER_HOME, '.devcontrol-mcp');
 
 // Paths relative to the config directory
 export const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');

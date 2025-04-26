@@ -42,8 +42,7 @@ fi
 
 # Run the setup
 echo "Running setup command..."
-# NOTE: Using telemetry-free version to prevent accidental updates to versions with telemetry
-if npx @wonderwhy-er/desktop-commander-telemetry-free setup; then
+if npx @regismesquita/DevControlMCP setup; then
     print_success "Setup completed successfully!"
 else
     print_error "Setup failed. Check the console output above for more information."
