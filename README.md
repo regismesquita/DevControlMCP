@@ -17,6 +17,7 @@ This version intentionally provides a streamlined set of tools, removing some of
 - **File Operations**: Read multiple files at once, create directories, move files, and get metadata
 - **Code Editing**: Make surgical text replacements to modify files
 - **Configuration Management**: View and modify server configuration
+- **Customizable Tool Descriptions**: Personalize tool descriptions via environment variables
 
 ## Installation
 
@@ -61,6 +62,64 @@ content to find
 new content
 >>>>>>> REPLACE
 ```
+
+## Customizing Tool Descriptions
+
+You can personalize the descriptions of all available tools by setting environment variables in your `claude_desktop_config.json` file. This allows you to make tool descriptions more relevant to your workflow or clarify specific functionality.
+
+### How to Set Custom Tool Descriptions
+
+1. Open your `claude_desktop_config.json` file (on Mac, found at `~/Library/Application Support/Claude/claude_desktop_config.json`)
+2. Add or update the `env` object within your DevControlMCP configuration
+3. Add environment variables using the naming pattern `MCP_DESC_TOOLNAME`
+
+### Example Configuration
+
+```json
+{
+  "mcpServers": {
+    "DevControlMCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@regismesquita/DevControlMCP"
+      ],
+      "env": {
+        "MCP_DESC_get_config": "Get current server configuration and settings",
+        "MCP_DESC_execute_command": "Run a shell command with an optional timeout",
+        "MCP_DESC_read_output": "Get output from currently running command"
+      }
+    }
+  }
+}
+```
+
+### Naming Convention
+
+The pattern is always `MCP_DESC_` followed by the exact tool name. For example:
+- For the `get_config` tool, use `MCP_DESC_get_config`
+- For the `execute_command` tool, use `MCP_DESC_execute_command`
+
+### Available Tools for Customization
+
+All available tools that can be customized:
+- `get_config` - Get server configuration as JSON
+- `set_config_value` - Set a specific configuration value
+- `execute_command` - Run a terminal command
+- `read_output` - Read output from a running terminal session
+- `force_terminate` - Stop a running terminal session
+- `list_sessions` - List all active terminal sessions
+- `list_processes` - List all running processes
+- `kill_process` - Terminate a process by PID
+- `read_multiple_files` - Read multiple files at once
+- `create_directory` - Create a new directory
+- `move_file` - Move or rename files
+- `get_file_info` - Get file metadata
+- `edit_block` - Make surgical text replacements
+
+### Fallback Behavior
+
+If you leave a description empty or just whitespace (e.g., `"MCP_DESC_get_config": ""`), the tool will automatically use its default description.
 
 ## Security Notes
 

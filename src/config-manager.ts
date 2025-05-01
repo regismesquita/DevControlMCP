@@ -15,9 +15,10 @@ export interface ServerConfig {
  * Singleton config manager for the server
  */
 class ConfigManager {
-  private configPath: string;
-  private config: ServerConfig = {};
-  private initialized = false;
+  // Made these properties public for testing purposes
+  public configPath: string;
+  public config: ServerConfig = {};
+  public initialized = false;
 
   constructor() {
     // Get user's home directory
@@ -126,7 +127,7 @@ class ConfigManager {
   /**
    * Save config to disk
    */
-  private async saveConfig() {
+  public async saveConfig() {
     try {
       await fs.writeFile(this.configPath, JSON.stringify(this.config, null, 2), 'utf8');
     } catch (error) {
