@@ -13,16 +13,11 @@ import {
     ForceTerminateArgsSchema,
     ListSessionsArgsSchema,
     KillProcessArgsSchema,
-    ReadFileArgsSchema,
     ReadMultipleFilesArgsSchema,
-    WriteFileArgsSchema,
     CreateDirectoryArgsSchema,
-    ListDirectoryArgsSchema,
     MoveFileArgsSchema,
-    SearchFilesArgsSchema,
     GetFileInfoArgsSchema,
     EditBlockArgsSchema,
-    SearchCodeArgsSchema,
     GetConfigArgsSchema,
     SetConfigValueArgsSchema,
     ListProcessesArgsSchema,
@@ -120,22 +115,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
                 // Filesystem tools
                 {
-                    name: "read_file",
-                    description:
-                        "Read the complete contents of a file from the file system or a URL. When reading from the file system, only works within allowed directories. Can fetch content from URLs when isUrl parameter is set to true. Handles text files normally and image files are returned as viewable images. Recognized image types: PNG, JPEG, GIF, WebP.",
-                    inputSchema: zodToJsonSchema(ReadFileArgsSchema),
-                },
-                {
                     name: "read_multiple_files",
                     description:
                         "Read the contents of multiple files simultaneously. Each file's content is returned with its path as a reference. Handles text files normally and renders images as viewable content. Recognized image types: PNG, JPEG, GIF, WebP. Failed reads for individual files won't stop the entire operation. Only works within allowed directories.",
                     inputSchema: zodToJsonSchema(ReadMultipleFilesArgsSchema),
-                },
-                {
-                    name: "write_file",
-                    description:
-                        "Completely replace file contents. Best for large changes (>20% of file) or when edit_block fails. Use with caution as it will overwrite existing files. Only works within allowed directories.",
-                    inputSchema: zodToJsonSchema(WriteFileArgsSchema),
                 },
                 {
                     name: "create_directory",
@@ -144,28 +127,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                     inputSchema: zodToJsonSchema(CreateDirectoryArgsSchema),
                 },
                 {
-                    name: "list_directory",
-                    description:
-                        "Get a detailed listing of all files and directories in a specified path. Results distinguish between files and directories with [FILE] and [DIR] prefixes. Only works within allowed directories.",
-                    inputSchema: zodToJsonSchema(ListDirectoryArgsSchema),
-                },
-                {
                     name: "move_file",
                     description:
                         "Move or rename files and directories. Can move files between directories and rename them in a single operation. Both source and destination must be within allowed directories.",
                     inputSchema: zodToJsonSchema(MoveFileArgsSchema),
-                },
-                {
-                    name: "search_files",
-                    description:
-                        "Finds files by name using a case-insensitive substring matching. Searches through all subdirectories from the starting path. Has a default timeout of 30 seconds which can be customized using the timeoutMs parameter. Only searches within allowed directories.",
-                    inputSchema: zodToJsonSchema(SearchFilesArgsSchema),
-                },
-                {
-                    name: "search_code",
-                    description:
-                        "Search for text/code patterns within file contents using ripgrep. Fast and powerful search similar to VS Code search functionality. Supports regular expressions, file pattern filtering, and context lines. Has a default timeout of 30 seconds which can be customized. Only searches within allowed directories.",
-                    inputSchema: zodToJsonSchema(SearchCodeArgsSchema),
                 },
                 {
                     name: "get_file_info",
@@ -243,29 +208,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
                 return await handlers.handleKillProcess(args);
 
             // Filesystem tools
-            case "read_file":
-                return await handlers.handleReadFile(args);
-
             case "read_multiple_files":
                 return await handlers.handleReadMultipleFiles(args);
-
-            case "write_file":
-                return await handlers.handleWriteFile(args);
 
             case "create_directory":
                 return await handlers.handleCreateDirectory(args);
 
-            case "list_directory":
-                return await handlers.handleListDirectory(args);
-
             case "move_file":
                 return await handlers.handleMoveFile(args);
-
-            case "search_files":
-                return await handlers.handleSearchFiles(args);
-
-            case "search_code":
-                return await handlers.handleSearchCode(args);
 
             case "get_file_info":
                 return await handlers.handleGetFileInfo(args);

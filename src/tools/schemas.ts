@@ -35,25 +35,11 @@ export const KillProcessArgsSchema = z.object({
 });
 
 // Filesystem tools schemas
-export const ReadFileArgsSchema = z.object({
-  path: z.string(),
-  isUrl: z.boolean().optional().default(false),
-});
-
 export const ReadMultipleFilesArgsSchema = z.object({
   paths: z.array(z.string()),
 });
 
-export const WriteFileArgsSchema = z.object({
-  path: z.string(),
-  content: z.string(),
-});
-
 export const CreateDirectoryArgsSchema = z.object({
-  path: z.string(),
-});
-
-export const ListDirectoryArgsSchema = z.object({
   path: z.string(),
 });
 
@@ -62,26 +48,8 @@ export const MoveFileArgsSchema = z.object({
   destination: z.string(),
 });
 
-export const SearchFilesArgsSchema = z.object({
-  path: z.string(),
-  pattern: z.string(),
-  timeoutMs: z.number().optional(),
-});
-
 export const GetFileInfoArgsSchema = z.object({
   path: z.string(),
-});
-
-// Search tools schema
-export const SearchCodeArgsSchema = z.object({
-  path: z.string(),
-  pattern: z.string(),
-  filePattern: z.string().optional(),
-  ignoreCase: z.boolean().optional(),
-  maxResults: z.number().optional(),
-  includeHidden: z.boolean().optional(),
-  contextLines: z.number().optional(),
-  timeoutMs: z.number().optional(),
 });
 
 // Edit tools schemas

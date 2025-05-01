@@ -8,14 +8,15 @@
 
 DevControlMCP is an MCP (Model Context Protocol) tool that enables Claude desktop app to execute terminal commands and interact with your file system. It turns Claude into a powerful assistant for coding, system management, and file operations.
 
+This version intentionally provides a streamlined set of tools, removing some of the more specialized functionality to focus on the core features. The removed tools include `read_file`, `write_file`, `list_directory`, `search_files`, and `search_code`, but their underlying functionality can still be achieved through terminal commands using `execute_command`.
+
 ## Features
 
 - **Terminal Operations**: Execute commands with output streaming, timeouts, and background execution
 - **Process Management**: List and manage running processes
-- **File Operations**: Read/write files, create/list directories, move files, and get metadata
-- **Advanced Search**: Find files by name or search within file contents using ripgrep
-- **Code Editing**: Make surgical text replacements or full file rewrites
-- **URL Content**: Fetch and process content from URLs
+- **File Operations**: Read multiple files at once, create directories, move files, and get metadata
+- **Code Editing**: Make surgical text replacements to modify files
+- **Configuration Management**: View and modify server configuration
 
 ## Installation
 
@@ -44,14 +45,9 @@ npm run setup
 | | `list_sessions` | List all active terminal sessions |
 | | `list_processes` | List all running processes |
 | | `kill_process` | Terminate a process by PID |
-| **Filesystem** | `read_file` | Read local files or URLs |
-| | `read_multiple_files` | Read multiple files at once |
-| | `write_file` | Write to a file (replace contents) |
+| **Filesystem** | `read_multiple_files` | Read multiple files at once |
 | | `create_directory` | Create a new directory |
-| | `list_directory` | List files/directories |
 | | `move_file` | Move or rename files |
-| | `search_files` | Find files by name |
-| | `search_code` | Search for patterns in file contents |
 | | `get_file_info` | Get file metadata |
 | **Text Editing** | `edit_block` | Make surgical text replacements |
 

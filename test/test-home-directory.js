@@ -11,7 +11,6 @@
 import { configManager } from '../dist/config-manager.js';
 import { 
   validatePath, 
-  listDirectory, 
   readFile, 
   writeFile, 
   createDirectory 
@@ -221,11 +220,13 @@ async function testFileOperationsWithTilde() {
     
     // Test listing a directory with tilde
     console.log(`Attempting to list directory: ${TEST_DIR_TILDE}`);
-    const entries = await listDirectory(TEST_DIR_TILDE);
-    console.log(`Listed test directory: ${entries}`);
+    // Since listDirectory is removed, use fs.readdir directly
+    const expandedPath = await validatePath(TEST_DIR_TILDE);
+    const dirEntries = await fs.readdir(expandedPath);
+    console.log(`Listed test directory: ${dirEntries}`);
     
     // Verify the entries
-    assert.ok(entries.some(entry => entry.includes('test-file.txt')), 'Directory listing should include test file');
+    assert.ok(dirEntries.includes('test-file.txt'), 'Directory listing should include test file');
     
     console.log('✓ File operations with tilde work correctly');
   } catch (error) {

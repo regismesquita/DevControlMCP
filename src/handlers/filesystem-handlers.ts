@@ -1,11 +1,7 @@
 import {
-    readFile,
     readMultipleFiles,
-    writeFile,
     createDirectory,
-    listDirectory,
     moveFile,
-    searchFiles,
     getFileInfo,
     type FileResult,
     type MultiFileResult
@@ -16,76 +12,13 @@ import { withTimeout } from '../utils.js';
 import { createErrorResponse } from '../error-handlers.js';
 
 import {
-    ReadFileArgsSchema,
     ReadMultipleFilesArgsSchema,
-    WriteFileArgsSchema,
     CreateDirectoryArgsSchema,
-    ListDirectoryArgsSchema,
     MoveFileArgsSchema,
-    SearchFilesArgsSchema,
     GetFileInfoArgsSchema
 } from '../tools/schemas.js';
 
-/**
- * Helper function to check if path contains an error
- */
-function isErrorPath(path: string): boolean {
-    return path.startsWith('__ERROR__:');
-}
-
-/**
- * Extract error message from error path
- */
-function getErrorFromPath(path: string): string {
-    return path.substring('__ERROR__:'.length).trim();
-}
-
-/**
- * Handle read_file command
- */
-export async function handleReadFile(args: unknown): Promise<ServerResult> {
-    const HANDLER_TIMEOUT = 60000; // 60 seconds total operation timeout
-    
-    const readFileOperation = async () => {
-        const parsed = ReadFileArgsSchema.parse(args);
-        const fileResult = await readFile(parsed.path, parsed.isUrl);
-        
-        if (fileResult.isImage) {
-            // For image files, return as an image content type
-            return {
-                content: [
-                    { 
-                        type: "text", 
-                        text: `Image file: ${parsed.path} (${fileResult.mimeType})\n` 
-                    },
-                    {
-                        type: "image",
-                        data: fileResult.content,
-                        mimeType: fileResult.mimeType
-                    }
-                ],
-            };
-        } else {
-            // For all other files, return as text
-            return {
-                content: [{ type: "text", text: fileResult.content }],
-            };
-        }
-    };
-    
-    // Execute with timeout at the handler level
-    const result = await withTimeout(
-        readFileOperation(),
-        HANDLER_TIMEOUT,
-        'Read file handler operation',
-        null
-    );
-    if (result == null) {
-        // Handles the impossible case where withTimeout resolves to null instead of throwing
-        throw new Error('Failed to read the file');
-    }
-    return result;
-}
+// Helper functions removed as they were only used by the removed handlers
 
 /**
  * Handle read_multiple_files command
@@ -135,23 +68,6 @@ export async function handleReadMultipleFiles(args: unknown): Promise<ServerResu
 }
 
 /**
- * Handle write_file command
- */
-export async function handleWriteFile(args: unknown): Promise<ServerResult> {
-    try {
-        const parsed = WriteFileArgsSchema.parse(args);
-        await writeFile(parsed.path, parsed.content);
-        
-        return {
-            content: [{ type: "text", text: `Successfully wrote to ${parsed.path}` }],
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return createErrorResponse(errorMessage);
-    }
-}
-
-/**
  * Handle create_directory command
  */
 export async function handleCreateDirectory(args: unknown): Promise<ServerResult> {
@@ -168,22 +84,6 @@ export async function handleCreateDirectory(args: unknown): Promise<ServerResult
 }
 
 /**
- * Handle list_directory command
- */
-export async function handleListDirectory(args: unknown): Promise<ServerResult> {
-    try {
-        const parsed = ListDirectoryArgsSchema.parse(args);
-        const entries = await listDirectory(parsed.path);
-        return {
-            content: [{ type: "text", text: entries.join('\n') }],
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return createErrorResponse(errorMessage);
-    }
-}
-
-/**
  * Handle move_file command
  */
 export async function handleMoveFile(args: unknown): Promise<ServerResult> {
@@ -192,48 +92,6 @@ export async function handleMoveFile(args: unknown): Promise<ServerResult> {
         await moveFile(parsed.source, parsed.destination);
         return {
             content: [{ type: "text", text: `Successfully moved ${parsed.source} to ${parsed.destination}` }],
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return createErrorResponse(errorMessage);
-    }
-}
-
-/**
- * Handle search_files command
- */
-export async function handleSearchFiles(args: unknown): Promise<ServerResult> {
-    try {
-        const parsed = SearchFilesArgsSchema.parse(args);
-        const timeoutMs = parsed.timeoutMs || 30000; // 30 seconds default
-        
-        // Apply timeout at the handler level
-        const searchOperation = async () => {
-            return await searchFiles(parsed.path, parsed.pattern);
-        };
-        
-        // Use withTimeout at the handler level
-        const results = await withTimeout(
-            searchOperation(),
-            timeoutMs,
-            'File search operation',
-            [] // Empty array as default on timeout
-        );
-        
-        if (results.length === 0) {
-            // Similar approach as in handleSearchCode
-            if (timeoutMs > 0) {
-                return {
-                    content: [{ type: "text", text: `No matches found or search timed out after ${timeoutMs}ms.` }],
-                };
-            }
-            return {
-                content: [{ type: "text", text: "No matches found" }],
-            };
-        }
-        
-        return {
-            content: [{ type: "text", text: results.join('\n') }],
         };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
