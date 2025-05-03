@@ -6,6 +6,16 @@ import {
     ListPromptsRequestSchema,
     type CallToolRequest,
 } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
+
+// Define schema for prompts/get request if not already in SDK
+export const GetPromptRequestSchema = z.object({
+    method: z.literal("prompts/get"),
+    params: z.object({
+        name: z.string(),
+        arguments: z.record(z.string(), z.string()),
+    }),
+});
 import {zodToJsonSchema} from "zod-to-json-schema";
 import {
     ExecuteCommandArgsSchema,
@@ -26,6 +36,7 @@ import {getConfig, setConfigValue} from './tools/config.js';
 
 import {VERSION} from './version.js';
 import {capture} from "./utils.js";
+import {promptManager} from './prompt-manager.js';
 
 /**
  * Helper function to get tool description from environment variables or fall back to default.
@@ -79,10 +90,38 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
 
 // Add handler for prompts/list method
 server.setRequestHandler(ListPromptsRequestSchema, async () => {
-    // Return an empty list of prompts
-    return {
-        prompts: [],
-    };
+    console.error("Handling prompts/list request...");
+    try {
+        // Get all registered prompts
+        const registeredPrompts = promptManager.getRegisteredPrompts();
+        
+        // Transform registered prompts to MCP format
+        const promptsList = Object.values(registeredPrompts).map(prompt => {
+            // Convert input schema to arguments array format
+            const args = Object.entries(prompt.inputSchema.properties || {}).map(([name, prop]: [string, any]) => ({
+                name,
+                description: prop.description || "",
+                required: prompt.inputSchema.required?.includes(name) || false,
+            }));
+            
+            return {
+                name: prompt.name,
+                description: prompt.description || "",
+                arguments: args,
+            };
+        });
+        
+        console.error(`Returning ${promptsList.length} registered prompts`);
+        return {
+            prompts: promptsList,
+        };
+    } catch (error) {
+        console.error(`Error in prompts/list handler: ${error instanceof Error ? error.message : String(error)}`);
+        // Return empty list on error
+        return {
+            prompts: [],
+        };
+    }
 });
 
 console.error("Setting up request handlers...");
@@ -214,6 +253,55 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 import * as handlers from './handlers/index.js';
 import {ServerResult} from './types.js';
+
+// Add handler for prompts/get method
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    console.error("Handling prompts/get request...");
+    const { name, arguments: args } = request.params;
+    
+    try {
+        // Get the prompt
+        const prompt = promptManager.getPrompt(name);
+        
+        if (!prompt) {
+            console.error(`Prompt not found: ${name}`);
+            return {
+                messages: [],
+                isError: true,
+                errorMessage: `Prompt not found: ${name}`,
+            };
+        }
+        
+        // Validate that all required arguments are provided
+        if (prompt.inputSchema.required) {
+            const missingArgs = prompt.inputSchema.required.filter((argName: string) => !(argName in args));
+            
+            if (missingArgs.length > 0) {
+                console.error(`Missing required arguments for prompt ${name}: ${missingArgs.join(", ")}`);
+                return {
+                    messages: [],
+                    isError: true,
+                    errorMessage: `Missing required arguments: ${missingArgs.join(", ")}`,
+                };
+            }
+        }
+        
+        // Generate the message
+        const messages = prompt.messageGenerator(args);
+        
+        console.error(`Generated ${messages.length} messages for prompt: ${name}`);
+        return {
+            messages,
+        };
+    } catch (error) {
+        console.error(`Error in prompts/get handler: ${error instanceof Error ? error.message : String(error)}`);
+        return {
+            messages: [],
+            isError: true,
+            errorMessage: `Error generating prompt: ${error instanceof Error ? error.message : String(error)}`,
+        };
+    }
+});
 
 server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest): Promise<ServerResult> => {
     try {

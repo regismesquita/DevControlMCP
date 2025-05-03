@@ -128,6 +128,155 @@ If you leave a description empty or just whitespace (e.g., `"MCP_DESC_get_config
 - Use a separate chat for configuration changes
 - This thing can completely destroy your system, files , projects and even worse... so be careful. By default this thing has permission to do whatever it wants on your computer.
 
+## Custom MCP Prompts
+
+DevControlMCP supports defining custom MCP prompts via environment variables. This allows you to create reusable prompts that Claude can access through the MCP protocol.
+
+### Defining Custom Prompts
+
+Custom prompts are defined using environment variables with keys prefixed with `MCP_PROMPT_DEF_`. The value must be a valid JSON string representing an object with the following structure:
+
+```json
+{
+  "inputs": { 
+    "paramName1": "string", 
+    "paramName2": "string" 
+  },
+  "message": [
+    "First line of the prompt with {paramName1}",
+    "Second line with {paramName2}"
+  ],
+  "description": "Optional description of what this prompt does"
+}
+```
+
+You can define custom prompts in two formats:
+
+#### Standard Format (with escaped double quotes)
+
+```
+MCP_PROMPT_DEF_code_review="{\"inputs\":{\"language\":\"string\",\"code\":\"string\"},\"message\":[\"Please review this {language} code:\",\"{code}\"]}"
+```
+
+#### Enhanced Format (with single quotes)
+
+For better readability, you can also use single quotes to wrap the entire JSON string, avoiding the need to escape double quotes inside:
+
+```
+MCP_PROMPT_DEF_code_review='{"inputs":{"language":"string","code":"string"},"message":["Please review this {language} code:","{code}"]}'
+```
+
+The enhanced format with single quotes is much easier to read and maintain, especially for complex prompts with nested quotes.
+
+### Custom Prompt Structure
+
+- **inputs**: A map of input parameter names to types (currently only "string" type is supported). All input parameters are required.
+- **message**: An array of strings that form the prompt template. Each string can contain placeholders in the format `{paramName}` that correspond to keys in the `inputs` object.
+- **description**: (Optional) A brief description of the prompt's purpose.
+
+### Example Custom Prompts
+
+#### Code Review Prompt
+
+```json
+{
+  "inputs": {
+    "language": "string",
+    "code": "string"
+  },
+  "message": [
+    "Please review the following {language} code for bugs, improvements, and best practices:",
+    "{code}",
+    "Please provide feedback on:",
+    "1. Correctness and potential bugs",
+    "2. Performance optimizations",
+    "3. Coding style and best practices",
+    "4. Security considerations"
+  ],
+  "description": "Review code for bugs, improvements, and best practices"
+}
+```
+
+#### Meeting Summary Prompt
+
+```json
+{
+  "inputs": {
+    "topic": "string",
+    "transcript": "string"
+  },
+  "message": [
+    "Please summarize the following meeting about {topic}:",
+    "{transcript}",
+    "Include the following in your summary:",
+    "- Key discussion points",
+    "- Decisions made",
+    "- Action items and owners",
+    "- Follow-up questions"
+  ],
+  "description": "Generate a concise meeting summary with action items"
+}
+```
+
+### Adding to Configuration
+
+Add your custom prompts to the `claude_desktop_config.json` file under the `env` section. You can use either of the following formats:
+
+#### Standard Format (with escaped quotes)
+
+```json
+{
+  "mcpServers": {
+    "DevControlMCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@regismesquita/DevControlMCP"
+      ],
+      "env": {
+        "MCP_PROMPT_DEF_code_review": "{\"inputs\":{\"language\":\"string\",\"code\":\"string\"},\"message\":[\"Please review the following {language} code for bugs, improvements, and best practices:\",\"{code}\",\"Please provide feedback on:\",\"1. Correctness and potential bugs\",\"2. Performance optimizations\",\"3. Coding style and best practices\",\"4. Security considerations\"],\"description\":\"Review code for bugs, improvements, and best practices\"}",
+        "MCP_PROMPT_DEF_meeting_summary": "{\"inputs\":{\"topic\":\"string\",\"transcript\":\"string\"},\"message\":[\"Please summarize the following meeting about {topic}:\",\"{transcript}\",\"Include the following in your summary:\",\"- Key discussion points\",\"- Decisions made\",\"- Action items and owners\",\"- Follow-up questions\"],\"description\":\"Generate a concise meeting summary with action items\"}"
+      }
+    }
+  }
+}
+```
+
+#### Enhanced Format (with single quotes)
+
+You can also use a cleaner format with single quotes around the JSON string, which avoids the need for escaping double quotes:
+
+```json
+{
+  "mcpServers": {
+    "DevControlMCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@regismesquita/DevControlMCP"
+      ],
+      "env": {
+        "MCP_PROMPT_DEF_code_review": '{"inputs":{"language":"string","code":"string"},"message":["Please review the following {language} code for bugs, improvements, and best practices:","{code}","Please provide feedback on:","1. Correctness and potential bugs","2. Performance optimizations","3. Coding style and best practices","4. Security considerations"],"description":"Review code for bugs, improvements, and best practices"}',
+        "MCP_PROMPT_DEF_meeting_summary": '{"inputs":{"topic":"string","transcript":"string"},"message":["Please summarize the following meeting about {topic}:","{transcript}","Include the following in your summary:","- Key discussion points","- Decisions made","- Action items and owners","- Follow-up questions"],"description":"Generate a concise meeting summary with action items"}'
+      }
+    }
+  }
+}
+```
+
+**Note:** When using the enhanced format with single quotes, make sure your JSON configuration file supports this syntax (most modern JSON parsers do). The single-quoted format makes it much easier to write and maintain your custom prompt definitions.
+
+### How Claude Uses Custom Prompts
+
+Claude will detect and list your custom prompts. When you select a custom prompt, Claude will request the necessary inputs and then generate a message using your template.
+
+### Important Notes
+
+- All placeholders in the `message` array must correspond to keys in the `inputs` object
+- All defined inputs are required when using the prompt
+- Messages are joined with double newlines when generating the final prompt
+- Prompts with invalid JSON or incorrect structure will be skipped
+
 ## License
 
 This project is licensed under the MIT License.
