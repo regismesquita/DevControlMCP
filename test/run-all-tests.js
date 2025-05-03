@@ -72,15 +72,17 @@ async function runTestModules() {
     './test-directory-creation.js',
     './test-allowed-directories.js',
     './test-blocked-commands.js',
-    './test-home-directory.js'
+    './test-home-directory.js',
+    './test-tool-descriptions.js',
+    './test-config-persistence.js'
   ];
   
   // Dynamically find additional test files (optional)
-  const testDir = path.join(__dirname, 'test');
   try {
-    const files = await fs.readdir(testDir);
+    // Just scan the current test directory (__dirname) for additional test files
+    const files = await fs.readdir(__dirname);
     for (const file of files) {
-      const relativePath = `./test/${file}`;
+      const relativePath = `./${file}`;
       if (file.startsWith('test-') && file.endsWith('.js') && !testModules.includes(relativePath)) {
         testModules.push(relativePath);
       }

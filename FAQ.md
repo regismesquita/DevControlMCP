@@ -32,6 +32,7 @@ This document provides answers to the most commonly asked questions about DevCon
   - [Is it safe to give Claude access to my file system?](#is-it-safe-to-give-claude-access-to-my-file-system)
   - [Can I control which directories Claude can access?](#can-i-control-which-directories-claude-can-access)
   - [What commands are blocked by default?](#what-commands-are-blocked-by-default)
+  - [Can I customize the tool descriptions?](#can-i-customize-the-tool-descriptions)
 
 - [Usage Scenarios](#usage-scenarios)
   - [Is it suitable for large codebases?](#is-it-suitable-for-large-codebases)
@@ -42,6 +43,7 @@ This document provides answers to the most commonly asked questions about DevCon
   - [Claude says it doesn't have permission to access my files/directories](#claude-says-it-doesnt-have-permission-to-access-my-filesdirectories)
   - [Claude keeps hitting token/output limits](#claude-keeps-hitting-tokenoutput-limits)
   - [Installation fails on my system](#installation-fails-on-my-system)
+  - [My custom tool descriptions aren't working](#my-custom-tool-descriptions-arent-working)
 
 - [Best Practices](#best-practices)
   - [What's the recommended workflow for coding?](#whats-the-recommended-workflow-for-coding)
@@ -168,31 +170,43 @@ Work is in progress to improve WSL (Windows Subsystem for Linux) integration and
 
 ### What can I do with DevControlMCP?
 
-The tool enables a wide range of tasks:
+This streamlined tool focuses on core functionality, enabling a wide range of tasks:
 
 **Code-related tasks:**
 - Explore and understand codebases, including generating diagrams
-- Read, write, and edit files with surgical precision
+- Read multiple files with the `read_multiple_files` tool
+- Create directories with `create_directory`
+- Move or rename files with `move_file`
+- Get file metadata with `get_file_info`
+- Edit files with surgical precision using `edit_block`
 - Work with multiple codebases or projects simultaneously
-- Perform comprehensive code searches across directories with timeout protection
+- Find files and search code using terminal commands via `execute_command` (e.g., `find`, `grep`)
 - Debug issues by comparing codebases
-- Fetch and analyze content from URLs
+- Fetch and analyze content from URLs through web search tools
 
 **Automation tasks:**
-- Run and manage terminal commands, including long-running processes
-- Execute automation scripts and workflows
-- Compress files, convert formats, encode videos
-- Monitor system processes
+- Run and manage terminal commands with `execute_command`, including long-running processes
+- Track command output with `read_output` and terminate processes with `force_terminate`
+- List active terminal sessions with `list_sessions`
+- Execute automation scripts and workflows through shell commands
+- Process files using command-line tools (compress, convert, encode)
+- Monitor system processes with `list_processes` and terminate them with `kill_process`
+
+**System configuration:**
+- View server configuration with `get_config`
+- Modify configuration settings with `set_config_value`
+- Set allowed directories for file operations
+- Configure command blocking for security
 
 **Documentation tasks:**
-- Generate documentation from code
-- Create diagrams of system architecture
+- Generate documentation from code using terminal commands
+- Create diagrams of system architecture via text output
 - Analyze and summarize codebases
 - Produce reports on code quality or structure
 
-### How does it handle file editing and URL content?
+### How does it handle file operations?
 
-DevControlMCP provides two main approaches to file editing and supports URL content:
+DevControlMCP provides these core approaches for file operations:
 
 1. **Surgical text replacements (`edit_block`):**
    - Best for small changes (<20% of file size)
@@ -207,16 +221,25 @@ DevControlMCP provides two main approaches to file editing and supports URL cont
    >>>>>>> REPLACE
    ```
 
-2. **Complete file rewrites (`write_file`):**
-   - Best for large changes (>20% of file size) or when edit_block fails
-   - Replaces the entire content of a file
+2. **Reading files (`read_multiple_files`):**
+   - Can read content from multiple files simultaneously
+   - Each file's content is returned with its path as a reference
+   - Handles text files normally and renders images as viewable content
+   - Supports recognized image types: PNG, JPEG, GIF, WebP
 
-3. **URL content retrieval (`read_file` with `isUrl: true`):**
-   - Fetch content from web resources
-   - Supports both text and image content from URLs
-   - Uses a 30-second timeout to prevent hanging on slow connections
+3. **File management:**
+   - Create directories with `create_directory`
+   - Move or rename files with `move_file`
+   - Get file metadata with `get_file_info`
 
-It also supports pattern-based replacements across multiple files.
+4. **Terminal-based operations:**
+   - Use standard shell commands through `execute_command` for additional file operations
+   - Write files using redirection operators (e.g., `echo "content" > file.txt`)
+   - Read files with commands like `cat` or `type`
+   - Search content with tools like `grep` or `findstr`
+   - Batch process files with shell scripts
+
+This streamlined approach focuses on core functionality while leveraging the power of terminal commands for more specialized operations.
 
 ### Can it help me understand complex codebases?
 
@@ -230,22 +253,7 @@ Yes, one of its strengths is codebase exploration. Claude can:
 
 This makes it particularly useful for onboarding to new projects or reviewing unfamiliar repositories.
 
-### How does it handle long-running commands and searches?
-
-Claude DevControlMCP has a sophisticated system for managing commands and operations that may take a while to complete:
-
-1. The `execute_command` function returns after a timeout with initial output
-2. The command continues running in the background
-3. You can use `read_output` with the PID to get new output as it becomes available
-4. You can use `force_terminate` to stop the command if needed
-
-For search operations:
-1. Both `search_files` and `search_code` have a default 30-second timeout
-2. This prevents searches from hanging indefinitely on large codebases
-3. You can customize the timeout duration with the `timeoutMs` parameter
-4. If a search times out, you'll receive a clear message indicating the timeout
-
-This allows Claude to manage processes that would normally exceed conversation timeouts, such as video encoding, large file operations, complex builds, or extensive searches.
+undefined builds, or extensive searches.
 
 ### Can I use it for non-coding tasks?
 
@@ -275,6 +283,79 @@ Recent updates have removed path limitations, and work is in progress to add con
 ### What commands are blocked by default?
 
 Claude DevControlMCP doesn't have a pre-defined blocklist, but you can use the `block_command` and `unblock_command` functions to manage which commands Claude can execute. It's recommended to block commands that could potentially be destructive, such as `rm -rf` or `format`.
+
+### Can I customize the tool descriptions?
+
+Yes, DevControlMCP allows you to customize the descriptions for all available tools through environment variables. This gives you the ability to make the tools more intuitive for your specific workflows or clarify functionality that's particularly relevant to your use cases.
+
+#### How to Configure Custom Tool Descriptions
+
+1. **Edit the Configuration File**: 
+   - Open your `claude_desktop_config.json` file
+   - On Mac: Located at `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - On Windows: Located in `%APPDATA%\Claude\claude_desktop_config.json`
+
+2. **Add Environment Variables**:
+   - Add or modify the `env` object within your DevControlMCP server configuration
+   - Use the naming pattern `MCP_DESC_TOOLNAME` for each tool description you want to customize
+
+#### Example Configuration Structure
+
+```json
+{
+  "mcpServers": {
+    "DevControlMCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@regismesquita/DevControlMCP"
+      ],
+      "env": {
+        "MCP_DESC_get_config": "Get current server configuration and settings",
+        "MCP_DESC_execute_command": "Run a shell command with an optional timeout",
+        "MCP_DESC_read_output": "Get output from currently running command"
+      }
+    }
+  }
+}
+```
+
+#### Naming Convention
+
+The format always follows this pattern: `MCP_DESC_` + tool name
+
+Examples:
+- For the `get_config` tool → use `MCP_DESC_get_config`
+- For the `execute_command` tool → use `MCP_DESC_execute_command`
+- For the `read_multiple_files` tool → use `MCP_DESC_read_multiple_files`
+
+#### Complete List of Available Tools for Customization
+
+All available tools that can be customized:
+- `get_config` - Get server configuration as JSON
+- `set_config_value` - Set a specific configuration value
+- `execute_command` - Run a terminal command
+- `read_output` - Read output from a running terminal session
+- `force_terminate` - Stop a running terminal session
+- `list_sessions` - List all active terminal sessions
+- `list_processes` - List all running processes
+- `kill_process` - Terminate a process by PID
+- `read_multiple_files` - Read multiple files at once
+- `create_directory` - Create a new directory
+- `move_file` - Move or rename files
+- `get_file_info` - Get file metadata
+- `edit_block` - Make surgical text replacements
+
+#### Fallback Behavior
+
+If you provide an empty string or just whitespace as a description (e.g., `"MCP_DESC_get_config": ""`), the tool will automatically fall back to using its default description.
+
+#### Benefits of Custom Descriptions
+
+- **Clearer documentation**: Customize descriptions to be more relevant to your specific use cases
+- **Workflow optimization**: Highlight the most important functionality for your team
+- **Better context**: Provide team-specific context or examples in the descriptions
+- **Simplified explanations**: Make complex tools more approachable with simpler descriptions
 
 ## Usage Scenarios
 
@@ -338,6 +419,61 @@ If you're having trouble installing Claude DevControlMCP:
 5. Try the manual installation method (Option 3 in the installation instructions)
 
 For persistent issues, create an issue on the [GitHub repository](https://github.com/regismesquita/DevControlMCP/issues/new).
+
+### My custom tool descriptions aren't working
+
+If your custom tool descriptions aren't being applied:
+
+1. **Check your configuration structure**: 
+   - Make sure you're using the correct JSON structure (see example below)
+   - The `env` object should be inside your DevControlMCP server configuration
+   - The complete path should be `mcpServers.DevControlMCP.env.MCP_DESC_toolname`
+
+   ```json
+   {
+     "mcpServers": {
+       "DevControlMCP": {
+         "command": "npx",
+         "args": ["-y", "@regismesquita/DevControlMCP"],
+         "env": {
+           "MCP_DESC_get_config": "Your custom description here"
+         }
+       }
+     }
+   }
+   ```
+
+2. **Verify naming convention**: 
+   - Ensure you're using the correct naming pattern (`MCP_DESC_toolname`)
+   - Double-check that tool names match exactly (e.g., `MCP_DESC_get_config`, not `MCP_DESC_getconfig`)
+   - Remember that tool names are case-sensitive
+
+3. **Restart Claude Desktop completely** after making changes:
+   - Close the application entirely (not just the window)
+   - Wait a few seconds before reopening
+   - This ensures the new configuration is loaded
+
+4. **Check for empty descriptions**:
+   - Make sure your descriptions aren't just whitespace 
+   - Empty or whitespace-only descriptions will fall back to the default
+   - Descriptions must have actual content to override defaults
+
+5. **Validate your JSON**:
+   - Check for syntax errors (missing commas, quotes, etc.)
+   - Ensure proper nesting of objects
+   - Consider using a JSON validator if you're unsure
+
+6. **Start simple**:
+   - Try setting just one custom description first to isolate any issues
+   - Once that works, add more descriptions incrementally
+
+7. **Verify file permissions**:
+   - Ensure your `claude_desktop_config.json` file has proper read permissions
+   - Check that you have write permissions if you're modifying the file
+
+8. **Check logs**:
+   - If available, check Claude Desktop logs for any configuration errors
+   - Error messages might provide clues about what's wrong
 
 ## Best Practices
 

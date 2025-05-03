@@ -368,47 +368,10 @@ export async function createDirectory(dirPath: string): Promise<void> {
     await fs.mkdir(validPath, { recursive: true });
 }
 
-export async function listDirectory(dirPath: string): Promise<string[]> {
-    const validPath = await validatePath(dirPath);
-    const entries = await fs.readdir(validPath, { withFileTypes: true });
-    return entries.map((entry) => `${entry.isDirectory() ? "[DIR]" : "[FILE]"} ${entry.name}`);
-}
-
 export async function moveFile(sourcePath: string, destinationPath: string): Promise<void> {
     const validSourcePath = await validatePath(sourcePath);
     const validDestPath = await validatePath(destinationPath);
     await fs.rename(validSourcePath, validDestPath);
-}
-
-export async function searchFiles(rootPath: string, pattern: string): Promise<string[]> {
-    const results: string[] = [];
-
-    async function search(currentPath: string) {
-        const entries = await fs.readdir(currentPath, { withFileTypes: true });
-
-        for (const entry of entries) {
-            const fullPath = path.join(currentPath, entry.name);
-            
-            try {
-                await validatePath(fullPath);
-
-                if (entry.name.toLowerCase().includes(pattern.toLowerCase())) {
-                    results.push(fullPath);
-                }
-
-                if (entry.isDirectory()) {
-                    await search(fullPath);
-                }
-            } catch (error) {
-                continue;
-            }
-        }
-    }
-    
-    // if path not exist, it will throw an error
-    const validPath = await validatePath(rootPath);
-    await search(validPath);
-    return results;
 }
 
 export async function getFileInfo(filePath: string): Promise<Record<string, any>> {

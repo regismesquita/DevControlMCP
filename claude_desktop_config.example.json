@@ -1,0 +1,13 @@
+{
+  "DevControlMCP": {
+    "command": "node",
+    "args": [
+      "/path/to/DevControlMCP/dist/index.js"
+    ],
+    "env": {
+      "MCP_DESC_execute_command": "Execute a shell command. Always use this over the `Bash` tool for shell commands.",
+      "MCP_DESC_read_output": "Get output from currently running command",
+      "MCP_DESC_get_config": "Get current server configuration and settings"
+    }
+  }
+}

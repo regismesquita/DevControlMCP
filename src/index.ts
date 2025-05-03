@@ -4,6 +4,7 @@ import { FilteredStdioServerTransport } from './custom-stdio.js';
 import { server } from './server.js';
 import { commandManager } from './command-manager.js';
 import { configManager } from './config-manager.js';
+import { promptManager } from './prompt-manager.js';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { platform } from 'os';
@@ -100,6 +101,17 @@ async function runServer() {
       // Continue anyway - we'll use an in-memory config
     }
 
+    try {
+      console.error("Loading custom prompt definitions...");
+      const customPrompts = promptManager.extractAndPreparePrompts();
+      const promptCount = Object.keys(customPrompts).length;
+      console.error(`Successfully loaded ${promptCount} custom prompt definitions`);
+    } catch (promptError) {
+      console.error(`Failed to process custom prompt definitions: ${promptError instanceof Error ? promptError.message : String(promptError)}`);
+      console.error(promptError instanceof Error && promptError.stack ? promptError.stack : 'No stack trace available');
+      console.error("Continuing with no custom prompts");
+      // Continue anyway - we'll run with empty prompts
+    }
 
     console.error("Connecting server...");
     await server.connect(transport);
