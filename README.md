@@ -105,6 +105,33 @@ The following configuration options can be set using the `set_config_value` tool
 | `fileReadLineLimit` | Maximum number of lines to read from a file | `1000` |
 | `fileWriteLineLimit` | Maximum number of lines to write to a file | `50` |
 
+## Customizing Tool Descriptions
+
+You can customize the descriptions of any tool by setting environment variables. This allows you to tailor tool descriptions to your specific needs without modifying the code.
+
+The environment variable pattern is:
+
+```
+MCP_DESC_<TOOL_NAME>="Your custom tool description"
+```
+
+Where `<TOOL_NAME>` is the uppercase name of the tool with any non-alphanumeric characters replaced by underscores.
+
+Examples:
+
+```bash
+# Custom description for get_config tool
+export MCP_DESC_GET_CONFIG="View the current configuration settings for the DevControlMCP server"
+
+# Custom description for execute_command tool
+export MCP_DESC_EXECUTE_COMMAND="Run a command in the terminal, with output streaming and timeout support"
+
+# Custom description for read_file tool with more specific details for your environment
+export MCP_DESC_READ_FILE="Read a file from your project directory or fetch content from a URL"
+```
+
+These environment variables can be set in your shell profile for persistence or right before launching the server.
+
 ## Security Notes
 
 - Set `allowedDirectories` to control filesystem access
@@ -122,6 +149,7 @@ This release includes several improvements from the upstream project:
 - **Logging Utilities**: New npm scripts for viewing, analyzing, exporting, and clearing logs
 - **Levenshtein Distance**: Added fastest-levenshtein library for improved string comparison
 - **Configuration Options**: New options for controlling line-based file reading and writing
+- **Customizable Tool Descriptions**: Easily change tool descriptions using environment variables
 
 All features have been implemented without telemetry, maintaining our commitment to privacy.
 
