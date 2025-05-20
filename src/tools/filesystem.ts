@@ -281,12 +281,13 @@ export async function readFileFromDisk(filePath: string, offset?: number, limit?
                 
                 // Check if the file exists and get basic stats
                 const stats = await fs.stat(validPath);
-                const MAX_BINARY_SIZE = 10 * 1024 * 1024; // 10MB limit for binary files
+                // Get binary file size limit from config (default to 10MB if not set)
+                const binaryFileSizeLimit = config.binaryFileSizeLimit || 10 * 1024 * 1024;
                 
                 // If file is binary and large, apply size limit
-                if (stats.size > MAX_BINARY_SIZE && !mimeType.startsWith('text/')) {
+                if (stats.size > binaryFileSizeLimit && !mimeType.startsWith('text/')) {
                     return { 
-                        content: `Binary file too large (${(stats.size / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is 10 MB.`, 
+                        content: `Binary file too large (${(stats.size / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is ${(binaryFileSizeLimit / 1024 / 1024).toFixed(0)} MB.`, 
                         mimeType: 'text/plain', 
                         isImage: false 
                     };
@@ -311,10 +312,13 @@ export async function readFileFromDisk(filePath: string, offset?: number, limit?
                         lines.push(line);
                     }
                     
-                    // Stop counting if we've reached a reasonable upper limit
-                    if (lineCount > 1000000) {
-                        // Set lineCount to a high value to indicate it's a very large file
-                        lineCount = 1000000;
+                    // Get max line count limit from config (default to 1,000,000 if not set)
+                    const maxLineCountLimit = config.maxLineCountLimit || 1000000;
+                    
+                    // Stop counting if we've reached the configured upper limit
+                    if (lineCount > maxLineCountLimit) {
+                        // Set lineCount to the max limit to indicate it's a very large file
+                        lineCount = maxLineCountLimit;
                         break;
                     }
                 }
@@ -327,19 +331,22 @@ export async function readFileFromDisk(filePath: string, offset?: number, limit?
                     const startLine = effectiveOffset + 1;
                     const endLine = effectiveOffset + lines.length;
                     
-                    content = `[Showing lines ${startLine} to ${endLine} of ${lineCount}${lineCount === 1000000 ? '+' : ''} total lines]\n\n${content}`;
+                    // Get max line count limit from config (default to 1,000,000 if not set)
+                    const maxLineCountLimit = config.maxLineCountLimit || 1000000;
+                    content = `[Showing lines ${startLine} to ${endLine} of ${lineCount}${lineCount === maxLineCountLimit ? '+' : ''} total lines]\n\n${content}`;
                 }
                 
                 return { content, mimeType, isImage };
             } catch (error) {
                 // If UTF-8 reading fails, treat as binary and return base64 but still as text
                 const buffer = await fs.readFile(validPath);
-                const MAX_BINARY_SIZE = 10 * 1024 * 1024; // 10MB limit for binary files
+                // Get binary file size limit from config
+                const binaryFileSizeLimit = config.binaryFileSizeLimit || 10 * 1024 * 1024; // Default to 10MB
                 
                 // Apply size limit for binary files
-                if (buffer.length > MAX_BINARY_SIZE) {
+                if (buffer.length > binaryFileSizeLimit) {
                     return { 
-                        content: `Binary file too large (${(buffer.length / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is 10 MB.`, 
+                        content: `Binary file too large (${(buffer.length / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is ${(binaryFileSizeLimit / 1024 / 1024).toFixed(0)} MB.`, 
                         mimeType: 'text/plain', 
                         isImage: false 
                     };

@@ -49,8 +49,16 @@ function getToolDescription(toolName: string, defaultDescription: string): strin
     const envVarName = `MCP_DESC_${toolName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
     const customDescription = process.env[envVarName];
     
+    // Maximum allowed description length (too long descriptions can cause UI issues)
+    const MAX_DESCRIPTION_LENGTH = 1000;
+    
     // Use custom description if it exists and isn't just whitespace
     if (customDescription !== undefined && customDescription.trim() !== '') {
+        // Validate description length
+        if (customDescription.length > MAX_DESCRIPTION_LENGTH) {
+            console.warn(`Tool description for ${toolName} exceeds maximum length of ${MAX_DESCRIPTION_LENGTH} characters. Description will be truncated.`);
+            return customDescription.substring(0, MAX_DESCRIPTION_LENGTH) + '... (truncated)';
+        }
         return customDescription;
     } else {
         return defaultDescription;

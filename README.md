@@ -59,6 +59,15 @@ npm run logs:clear
 npm run logs:clear -- --force
 ```
 
+#### Audit Logging
+
+All tool calls are automatically logged to `~/.devcontrol-mcp/tool-calls.log` for auditing purposes. The log file is automatically rotated when it reaches 10MB in size. The system retains the 5 most recent log files and automatically removes older logs to prevent unbounded disk usage.
+
+Tool call logs include:
+- Timestamp
+- Tool name
+- Arguments passed to the tool (when applicable)
+
 ## Available Tools
 
 | Category | Tool | Description |
@@ -104,6 +113,8 @@ The following configuration options can be set using the `set_config_value` tool
 | `defaultShell` | Shell to use for command execution | `bash` (Unix) or `powershell.exe` (Windows) |
 | `fileReadLineLimit` | Maximum number of lines to read from a file | `1000` |
 | `fileWriteLineLimit` | Maximum number of lines to write to a file | `50` |
+| `maxLineCountLimit` | Maximum line count for file reading (prevents memory issues on very large files) | `1000000` |
+| `binaryFileSizeLimit` | Maximum size for binary files in bytes | `10485760` (10MB) |
 
 ## Customizing Tool Descriptions
 
@@ -137,19 +148,24 @@ These environment variables can be set in your shell profile for persistence or 
 - Set `allowedDirectories` to control filesystem access
 - Be cautious when running terminal commands as they have full access to your system
 - Use a separate chat for configuration changes
-- This thing can completely destroy your system, files , projects and even worse... so be careful. By default this thing has permission to do whatever it wants on your computer.
+- Monitor the audit logs regularly to track tool usage
+- Set appropriate limits for binary file size and line reading to prevent memory exhaustion
+- This thing can completely destroy your system, files, projects and even worse... so be careful. By default this thing has permission to do whatever it wants on your computer.
 
 ## What's New in v0.2.0
 
 This release includes several improvements from the upstream project:
 
 - **Line-based File Reading**: Files are now read line by line instead of character by character, with configurable limits
+- **Streaming File Reading**: Using readline for memory-efficient processing of large files
+- **Binary File Protection**: Size limits for binary files to prevent memory exhaustion
 - **Audit Logging**: All tool calls are now logged with timestamps and arguments
+- **Log Retention Policy**: Automatic cleanup of old log files to prevent unbounded disk usage
 - **Fuzzy Search Logging**: Comprehensive logging for edit operations with similarity scores and execution times
 - **Logging Utilities**: New npm scripts for viewing, analyzing, exporting, and clearing logs
 - **Levenshtein Distance**: Added fastest-levenshtein library for improved string comparison
-- **Configuration Options**: New options for controlling line-based file reading and writing
-- **Customizable Tool Descriptions**: Easily change tool descriptions using environment variables
+- **Enhanced Configuration Options**: New options for controlling line limits, binary file size limits, and maximum line counts
+- **Customizable Tool Descriptions**: Easily change tool descriptions using environment variables with length validation
 
 All features have been implemented without telemetry, maintaining our commitment to privacy.
 

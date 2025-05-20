@@ -1,10 +1,60 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { TOOL_CALL_FILE, TOOL_CALL_FILE_MAX_SIZE } from '../config.js';
+import { TOOL_CALL_FILE, TOOL_CALL_FILE_MAX_SIZE, LOG_RETENTION_COUNT } from '../config.js';
 
 // Ensure the directory for the log file exists
 const logDir = path.dirname(TOOL_CALL_FILE);
 await fs.promises.mkdir(logDir, { recursive: true });
+
+/**
+ * Clean up old log files, keeping only the most recent ones based on LOG_RETENTION_COUNT
+ * @param dirName Directory containing log files
+ * @param fileBase Base name of the log file
+ * @param fileExt Extension of the log file
+ */
+async function cleanupOldLogFiles(dirName: string, fileBase: string, fileExt: string): Promise<void> {
+  try {
+    // Read all files in the directory
+    const files = await fs.promises.readdir(dirName);
+    
+    // Filter rotated log files matching the pattern fileBase_timestamp.fileExt
+    const logPattern = new RegExp(`^${fileBase}_.*${fileExt}$`);
+    const rotatedLogFiles = files
+      .filter(file => logPattern.test(file))
+      .map(file => ({
+        name: file,
+        path: path.join(dirName, file),
+        created: 0
+      }));
+    
+    // If we have more files than the retention limit, get stats and sort by creation time
+    if (rotatedLogFiles.length > LOG_RETENTION_COUNT) {
+      // Get stats for all files to sort by creation time
+      for (const logFile of rotatedLogFiles) {
+        try {
+          const stats = await fs.promises.stat(logFile.path);
+          logFile.created = stats.ctimeMs; // Creation time in milliseconds
+        } catch (error) {
+          // If we can't get stats, use 0 (oldest possible time)
+        }
+      }
+      
+      // Sort by creation time (newest first)
+      rotatedLogFiles.sort((a, b) => b.created - a.created);
+      
+      // Delete oldest files beyond our retention limit
+      for (let i = LOG_RETENTION_COUNT; i < rotatedLogFiles.length; i++) {
+        try {
+          await fs.promises.unlink(rotatedLogFiles[i].path);
+        } catch (error) {
+          console.error(`Error deleting old log file ${rotatedLogFiles[i].path}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Error cleaning up log files: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
 
 /**
  * Track tool calls and save them to a log file
@@ -42,6 +92,9 @@ export async function trackToolCall(toolName: string, args?: unknown): Promise<v
       
       // Rename the current file
       await fs.promises.rename(TOOL_CALL_FILE, newFileName);
+      
+      // Clean up old rotated log files to prevent unbounded disk usage
+      await cleanupOldLogFiles(dirName, fileBase, fileExt);
     }
     
     // Append to log file (if file was renamed, this will create a new file)
