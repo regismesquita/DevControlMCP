@@ -275,48 +275,77 @@ export async function readFileFromDisk(filePath: string, offset?: number, limit?
         } else {
             // For all other files, try to read as UTF-8 text
             try {
-                // Read file with line limits
-                if (effectiveOffset > 0 || effectiveLimit < Number.MAX_SAFE_INTEGER) {
-                    // Read file line by line with limits
-                    const fileContent = await fs.readFile(validPath, "utf-8");
-                    
-                    // Split content into lines
-                    const lines = fileContent.split(/\r?\n/);
-                    
-                    // Apply offset and limit
-                    const selectedLines = lines.slice(
-                        effectiveOffset, 
-                        effectiveOffset + effectiveLimit
-                    );
-                    
-                    // Add a notice if we're not showing the full file
-                    let content = selectedLines.join('\n');
-                    if (effectiveOffset > 0 || effectiveOffset + effectiveLimit < lines.length) {
-                        content = `[Showing lines ${effectiveOffset + 1} to ${Math.min(effectiveOffset + effectiveLimit, lines.length)} of ${lines.length} total lines]\n\n${content}`;
-                    }
-                    
-                    return { content, mimeType, isImage };
-                } else {
-                    // If no limits specified, read the whole file (up to DEFAULT_LINE_LIMIT)
-                    const fileContent = await fs.readFile(validPath, "utf-8");
-                    
-                    // Split content into lines and apply the default limit
-                    const lines = fileContent.split(/\r?\n/);
-                    const limitedLines = lines.slice(0, DEFAULT_LINE_LIMIT);
-                    
-                    // Add a notice if we're not showing the full file
-                    let content = limitedLines.join('\n');
-                    if (lines.length > DEFAULT_LINE_LIMIT) {
-                        content = `[Showing first ${DEFAULT_LINE_LIMIT} lines of ${lines.length} total lines]\n\n${content}`;
-                    }
-                    
-                    return { content, mimeType, isImage };
+                // Use a streaming approach for reading files line by line
+                const { createReadStream } = require('fs');
+                const readline = require('readline');
+                
+                // Check if the file exists and get basic stats
+                const stats = await fs.stat(validPath);
+                const MAX_BINARY_SIZE = 10 * 1024 * 1024; // 10MB limit for binary files
+                
+                // If file is binary and large, apply size limit
+                if (stats.size > MAX_BINARY_SIZE && !mimeType.startsWith('text/')) {
+                    return { 
+                        content: `Binary file too large (${(stats.size / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is 10 MB.`, 
+                        mimeType: 'text/plain', 
+                        isImage: false 
+                    };
                 }
+                
+                // Create readline interface for streaming file line by line
+                const fileStream = createReadStream(validPath, { encoding: 'utf8' });
+                const rl = readline.createInterface({
+                    input: fileStream,
+                    crlfDelay: Infinity
+                });
+                
+                let lineCount = 0; // Total lines in file
+                const lines: string[] = []; // Collected lines
+                
+                // Process each line
+                for await (const line of rl) {
+                    lineCount++;
+                    
+                    // Only collect lines within our range
+                    if (lineCount > effectiveOffset && lines.length < effectiveLimit) {
+                        lines.push(line);
+                    }
+                    
+                    // Stop counting if we've reached a reasonable upper limit
+                    if (lineCount > 1000000) {
+                        // Set lineCount to a high value to indicate it's a very large file
+                        lineCount = 1000000;
+                        break;
+                    }
+                }
+                
+                // Format content with line info
+                let content = lines.join('\n');
+                
+                // Add a notice if we're not showing the full file
+                if (effectiveOffset > 0 || lines.length === effectiveLimit) {
+                    const startLine = effectiveOffset + 1;
+                    const endLine = effectiveOffset + lines.length;
+                    
+                    content = `[Showing lines ${startLine} to ${endLine} of ${lineCount}${lineCount === 1000000 ? '+' : ''} total lines]\n\n${content}`;
+                }
+                
+                return { content, mimeType, isImage };
             } catch (error) {
                 // If UTF-8 reading fails, treat as binary and return base64 but still as text
                 const buffer = await fs.readFile(validPath);
+                const MAX_BINARY_SIZE = 10 * 1024 * 1024; // 10MB limit for binary files
+                
+                // Apply size limit for binary files
+                if (buffer.length > MAX_BINARY_SIZE) {
+                    return { 
+                        content: `Binary file too large (${(buffer.length / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is 10 MB.`, 
+                        mimeType: 'text/plain', 
+                        isImage: false 
+                    };
+                }
+                
                 const content = `Binary file content (base64 encoded):\n${buffer.toString('base64')}`;
-
                 return { content, mimeType: 'text/plain', isImage: false };
             }
         }
