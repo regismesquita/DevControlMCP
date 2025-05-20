@@ -10,5 +10,7 @@ const CONFIG_DIR = path.join(USER_HOME, '.devcontrol-mcp');
 export const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 export const LOG_FILE = path.join(CONFIG_DIR, 'server.log');
 export const ERROR_LOG_FILE = path.join(CONFIG_DIR, 'error.log');
+export const TOOL_CALL_FILE = path.join(CONFIG_DIR, 'tool-calls.log');
+export const TOOL_CALL_FILE_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export const DEFAULT_COMMAND_TIMEOUT = 1000; // milliseconds

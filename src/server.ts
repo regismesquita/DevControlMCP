@@ -30,7 +30,7 @@ import {
 import {getConfig, setConfigValue} from './tools/config.js';
 
 import {VERSION} from './version.js';
-import {capture} from "./utils.js";
+import {trackToolCall} from "./utils/trackTools.js";
 
 console.error("Loading server.ts");
 
@@ -196,7 +196,8 @@ import {ServerResult} from './types.js';
 server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest): Promise<ServerResult> => {
     try {
         const {name, arguments: args} = request.params;
-        // Telemetry removed
+        // Log tool call for auditing
+        await trackToolCall(name, args);
 
         // Using a more structured approach with dedicated handlers
         switch (name) {
@@ -205,7 +206,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
                 try {
                     return await getConfig();
                 } catch (error) {
-                    capture('server_request_error', {message: `Error in get_config handler: ${error}`});
+                    console.error(`Error in get_config handler: ${error}`);
                     return {
                         content: [{type: "text", text: `Error: Failed to get configuration`}],
                         isError: true,
@@ -215,7 +216,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
                 try {
                     return await setConfigValue(args);
                 } catch (error) {
-                    capture('server_request_error', {message: `Error in set_config_value handler: ${error}`});
+                    console.error(`Error in set_config_value handler: ${error}`);
                     return {
                         content: [{type: "text", text: `Error: Failed to set configuration value`}],
                         isError: true,

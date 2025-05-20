@@ -48,7 +48,12 @@ export async function handleReadFile(args: unknown): Promise<ServerResult> {
     
     const readFileOperation = async () => {
         const parsed = ReadFileArgsSchema.parse(args);
-        const fileResult = await readFile(parsed.path, parsed.isUrl);
+        const fileResult = await readFile(
+            parsed.path, 
+            parsed.isUrl,
+            parsed.offset,
+            parsed.limit
+        );
         
         if (fileResult.isImage) {
             // For image files, return as an image content type

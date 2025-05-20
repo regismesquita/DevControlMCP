@@ -240,34 +240,23 @@ export async function readFileFromUrl(url: string): Promise<FileResult> {
 /**
  * Read file content from the local filesystem
  * @param filePath Path to the file
- * @param returnMetadata Whether to return metadata with the content
+ * @param offset Optional line offset to start reading from
+ * @param limit Optional maximum number of lines to read
  * @returns File content or file result with metadata
  */
-export async function readFileFromDisk(filePath: string): Promise<FileResult> {
+export async function readFileFromDisk(filePath: string, offset?: number, limit?: number): Promise<FileResult> {
     // Import the MIME type utilities
     const { getMimeType, isImageFile } = await import('./mime-types.js');
 
     const validPath = await validatePath(filePath);
     
-    // Check file size before attempting to read
-    try {
-        const stats = await fs.stat(validPath);
-        const MAX_SIZE = 100 * 1024; // 100KB limit
-        
-        if (stats.size > MAX_SIZE) {
-            const message = `File too large (${(stats.size / 1024).toFixed(2)}KB > ${MAX_SIZE / 1024}KB limit)`;
-            return { 
-                content: message, 
-                mimeType: 'text/plain', 
-                isImage: false 
-            };
-        }
-    } catch (error) {
-        console.error('error catch ' + error)
-        // Telemetry call removed
-        // If we can't stat the file, continue anyway and let the read operation handle errors
-        //console.error(`Failed to stat file ${validPath}:`, error);
-    }
+    // Get config to determine file read line limit
+    const config = await configManager.getConfig();
+    const DEFAULT_LINE_LIMIT = config.fileReadLineLimit || 1000; // Default to 1000 lines if not configured
+    
+    // Set the effective line limit (use provided limit or default)
+    const effectiveLimit = limit !== undefined ? limit : DEFAULT_LINE_LIMIT;
+    const effectiveOffset = offset || 0;
     
     // Detect the MIME type based on file extension
     const mimeType = getMimeType(validPath);
@@ -286,9 +275,43 @@ export async function readFileFromDisk(filePath: string): Promise<FileResult> {
         } else {
             // For all other files, try to read as UTF-8 text
             try {
-                const content = await fs.readFile(validPath, "utf-8");
-                
-                return { content, mimeType, isImage };
+                // Read file with line limits
+                if (effectiveOffset > 0 || effectiveLimit < Number.MAX_SAFE_INTEGER) {
+                    // Read file line by line with limits
+                    const fileContent = await fs.readFile(validPath, "utf-8");
+                    
+                    // Split content into lines
+                    const lines = fileContent.split(/\r?\n/);
+                    
+                    // Apply offset and limit
+                    const selectedLines = lines.slice(
+                        effectiveOffset, 
+                        effectiveOffset + effectiveLimit
+                    );
+                    
+                    // Add a notice if we're not showing the full file
+                    let content = selectedLines.join('\n');
+                    if (effectiveOffset > 0 || effectiveOffset + effectiveLimit < lines.length) {
+                        content = `[Showing lines ${effectiveOffset + 1} to ${Math.min(effectiveOffset + effectiveLimit, lines.length)} of ${lines.length} total lines]\n\n${content}`;
+                    }
+                    
+                    return { content, mimeType, isImage };
+                } else {
+                    // If no limits specified, read the whole file (up to DEFAULT_LINE_LIMIT)
+                    const fileContent = await fs.readFile(validPath, "utf-8");
+                    
+                    // Split content into lines and apply the default limit
+                    const lines = fileContent.split(/\r?\n/);
+                    const limitedLines = lines.slice(0, DEFAULT_LINE_LIMIT);
+                    
+                    // Add a notice if we're not showing the full file
+                    let content = limitedLines.join('\n');
+                    if (lines.length > DEFAULT_LINE_LIMIT) {
+                        content = `[Showing first ${DEFAULT_LINE_LIMIT} lines of ${lines.length} total lines]\n\n${content}`;
+                    }
+                    
+                    return { content, mimeType, isImage };
+                }
             } catch (error) {
                 // If UTF-8 reading fails, treat as binary and return base64 but still as text
                 const buffer = await fs.readFile(validPath);
@@ -316,14 +339,15 @@ export async function readFileFromDisk(filePath: string): Promise<FileResult> {
 /**
  * Read a file from either the local filesystem or a URL
  * @param filePath Path to the file or URL
- * @param returnMetadata Whether to return metadata with the content
  * @param isUrl Whether the path is a URL
+ * @param offset Optional line offset to start reading from
+ * @param limit Optional maximum number of lines to read
  * @returns File content or file result with metadata
  */
-export async function readFile(filePath: string, isUrl?: boolean): Promise<FileResult> {
+export async function readFile(filePath: string, isUrl?: boolean, offset?: number, limit?: number): Promise<FileResult> {
     return isUrl 
         ? readFileFromUrl(filePath)
-        : readFileFromDisk(filePath);
+        : readFileFromDisk(filePath, offset, limit);
 }
 
 export async function writeFile(filePath: string, content: string): Promise<void> {

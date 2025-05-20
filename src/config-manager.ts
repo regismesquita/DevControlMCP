@@ -8,6 +8,8 @@ export interface ServerConfig {
   blockedCommands?: string[];
   defaultShell?: string;
   allowedDirectories?: string[];
+  fileWriteLineLimit?: number; // Line limit for file write operations
+  fileReadLineLimit?: number; // Default line limit for file read operations
   [key: string]: any; // Allow for arbitrary configuration keys
 }
 
@@ -119,7 +121,9 @@ class ConfigManager {
         "takeown"    // Take ownership of files
       ],
       defaultShell: os.platform() === 'win32' ? 'powershell.exe' : 'bash',
-      allowedDirectories: []
+      allowedDirectories: [],
+      fileWriteLineLimit: 50,  // Default line limit for file write operations
+      fileReadLineLimit: 1000  // Default line limit for file read operations
     };
   }
 
