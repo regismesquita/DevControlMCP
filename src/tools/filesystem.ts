@@ -240,34 +240,23 @@ export async function readFileFromUrl(url: string): Promise<FileResult> {
 /**
  * Read file content from the local filesystem
  * @param filePath Path to the file
- * @param returnMetadata Whether to return metadata with the content
+ * @param offset Optional line offset to start reading from
+ * @param limit Optional maximum number of lines to read
  * @returns File content or file result with metadata
  */
-export async function readFileFromDisk(filePath: string): Promise<FileResult> {
+export async function readFileFromDisk(filePath: string, offset?: number, limit?: number): Promise<FileResult> {
     // Import the MIME type utilities
     const { getMimeType, isImageFile } = await import('./mime-types.js');
 
     const validPath = await validatePath(filePath);
     
-    // Check file size before attempting to read
-    try {
-        const stats = await fs.stat(validPath);
-        const MAX_SIZE = 100 * 1024; // 100KB limit
-        
-        if (stats.size > MAX_SIZE) {
-            const message = `File too large (${(stats.size / 1024).toFixed(2)}KB > ${MAX_SIZE / 1024}KB limit)`;
-            return { 
-                content: message, 
-                mimeType: 'text/plain', 
-                isImage: false 
-            };
-        }
-    } catch (error) {
-        console.error('error catch ' + error)
-        // Telemetry call removed
-        // If we can't stat the file, continue anyway and let the read operation handle errors
-        //console.error(`Failed to stat file ${validPath}:`, error);
-    }
+    // Get config to determine file read line limit
+    const config = await configManager.getConfig();
+    const DEFAULT_LINE_LIMIT = config.fileReadLineLimit || 1000; // Default to 1000 lines if not configured
+    
+    // Set the effective line limit (use provided limit or default)
+    const effectiveLimit = limit !== undefined ? limit : DEFAULT_LINE_LIMIT;
+    const effectiveOffset = offset || 0;
     
     // Detect the MIME type based on file extension
     const mimeType = getMimeType(validPath);
@@ -286,14 +275,84 @@ export async function readFileFromDisk(filePath: string): Promise<FileResult> {
         } else {
             // For all other files, try to read as UTF-8 text
             try {
-                const content = await fs.readFile(validPath, "utf-8");
+                // Use a streaming approach for reading files line by line
+                const { createReadStream } = require('fs');
+                const readline = require('readline');
+                
+                // Check if the file exists and get basic stats
+                const stats = await fs.stat(validPath);
+                // Get binary file size limit from config (default to 10MB if not set)
+                const binaryFileSizeLimit = config.binaryFileSizeLimit || 10 * 1024 * 1024;
+                
+                // If file is binary and large, apply size limit
+                if (stats.size > binaryFileSizeLimit && !mimeType.startsWith('text/')) {
+                    return { 
+                        content: `Binary file too large (${(stats.size / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is ${(binaryFileSizeLimit / 1024 / 1024).toFixed(0)} MB.`, 
+                        mimeType: 'text/plain', 
+                        isImage: false 
+                    };
+                }
+                
+                // Create readline interface for streaming file line by line
+                const fileStream = createReadStream(validPath, { encoding: 'utf8' });
+                const rl = readline.createInterface({
+                    input: fileStream,
+                    crlfDelay: Infinity
+                });
+                
+                let lineCount = 0; // Total lines in file
+                const lines: string[] = []; // Collected lines
+                
+                // Process each line
+                for await (const line of rl) {
+                    lineCount++;
+                    
+                    // Only collect lines within our range
+                    if (lineCount > effectiveOffset && lines.length < effectiveLimit) {
+                        lines.push(line);
+                    }
+                    
+                    // Get max line count limit from config (default to 1,000,000 if not set)
+                    const maxLineCountLimit = config.maxLineCountLimit || 1000000;
+                    
+                    // Stop counting if we've reached the configured upper limit
+                    if (lineCount > maxLineCountLimit) {
+                        // Set lineCount to the max limit to indicate it's a very large file
+                        lineCount = maxLineCountLimit;
+                        break;
+                    }
+                }
+                
+                // Format content with line info
+                let content = lines.join('\n');
+                
+                // Add a notice if we're not showing the full file
+                if (effectiveOffset > 0 || lines.length === effectiveLimit) {
+                    const startLine = effectiveOffset + 1;
+                    const endLine = effectiveOffset + lines.length;
+                    
+                    // Get max line count limit from config (default to 1,000,000 if not set)
+                    const maxLineCountLimit = config.maxLineCountLimit || 1000000;
+                    content = `[Showing lines ${startLine} to ${endLine} of ${lineCount}${lineCount === maxLineCountLimit ? '+' : ''} total lines]\n\n${content}`;
+                }
                 
                 return { content, mimeType, isImage };
             } catch (error) {
                 // If UTF-8 reading fails, treat as binary and return base64 but still as text
                 const buffer = await fs.readFile(validPath);
+                // Get binary file size limit from config
+                const binaryFileSizeLimit = config.binaryFileSizeLimit || 10 * 1024 * 1024; // Default to 10MB
+                
+                // Apply size limit for binary files
+                if (buffer.length > binaryFileSizeLimit) {
+                    return { 
+                        content: `Binary file too large (${(buffer.length / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is ${(binaryFileSizeLimit / 1024 / 1024).toFixed(0)} MB.`, 
+                        mimeType: 'text/plain', 
+                        isImage: false 
+                    };
+                }
+                
                 const content = `Binary file content (base64 encoded):\n${buffer.toString('base64')}`;
-
                 return { content, mimeType: 'text/plain', isImage: false };
             }
         }
@@ -316,14 +375,15 @@ export async function readFileFromDisk(filePath: string): Promise<FileResult> {
 /**
  * Read a file from either the local filesystem or a URL
  * @param filePath Path to the file or URL
- * @param returnMetadata Whether to return metadata with the content
  * @param isUrl Whether the path is a URL
+ * @param offset Optional line offset to start reading from
+ * @param limit Optional maximum number of lines to read
  * @returns File content or file result with metadata
  */
-export async function readFile(filePath: string, isUrl?: boolean): Promise<FileResult> {
+export async function readFile(filePath: string, isUrl?: boolean, offset?: number, limit?: number): Promise<FileResult> {
     return isUrl 
         ? readFileFromUrl(filePath)
-        : readFileFromDisk(filePath);
+        : readFileFromDisk(filePath, offset, limit);
 }
 
 export async function writeFile(filePath: string, content: string): Promise<void> {
