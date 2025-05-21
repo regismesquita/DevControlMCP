@@ -208,10 +208,10 @@ These environment variables can be set in your shell profile for persistence or 
 - Set `allowedDirectories` to control filesystem access for most tools
 - Be cautious when running terminal commands as they have full access to your system
 - Use a separate chat for configuration changes
-- **`claude_code` tool**: Bypasses internal permission controls and delegates to external CLI with `--dangerously-skip-permissions`
+- **`claude_code` tool**: Bypasses internal permission controls and delegates to Claude CLI with `--dangerously-skip-permissions`
 - Monitor the audit logs regularly to track tool usage
 - Set appropriate limits for binary file size and line reading to prevent memory exhaustion
-- This tool can completely destroy your system, files, projects and even worse... so be careful. By default this tool has permission to do whatever it wants on your computer.
+- This tool can completely destroy your system, files, projects and even worse... so be careful. By default, DevControlMCP tools have broad permissions. The `claude_code` tool, in particular, operates with full system access by design, bypassing DevControlMCP's specific permission settings.
 
 ## What's New in v0.2.0
 

@@ -185,7 +185,7 @@ class ConfigManager {
     }
     
     // Validate claudeCliPath to ensure it's absolute if provided
-    if (key === 'claudeCliPath' && value !== undefined && value !== null) {
+    if (key === 'claudeCliPath' && value != null) {
       if (typeof value !== 'string') {
         console.warn(`Invalid value for ${key}: ${value}. Must be a string. Using default.`);
         return undefined;
