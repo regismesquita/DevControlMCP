@@ -1,6 +1,6 @@
 {
   "name": "@regismesquita/DevControlMCP",
-  "version": "0.1.35",
+  "version": "0.2.0",
   "description": "MCP server for terminal operations and file editing",
   "license": "MIT",
   "author": "Regis Mesquita",
@@ -34,7 +34,11 @@
     "install:claude-cli": "npm install -g @anthropic-ai/claude-code && echo \"Claude Code CLI installed. IMPORTANT: Remember to run 'claude --dangerously-skip-permissions' manually once in your terminal to accept permissions.\"",
     "link:local": "npm run build && npm link",
     "unlink:local": "npm unlink",
-    "inspector": "npx @modelcontextprotocol/inspector dist/index.js"
+    "inspector": "npx @modelcontextprotocol/inspector dist/index.js",
+    "logs:view": "npm run build && node scripts/view-fuzzy-logs.js",
+    "logs:analyze": "npm run build && node scripts/analyze-fuzzy-logs.js",
+    "logs:clear": "npm run build && node scripts/clear-fuzzy-logs.js",
+    "logs:export": "npm run build && node scripts/export-fuzzy-logs.js"
   },
   "publishConfig": {
     "access": "public"
@@ -62,12 +66,14 @@
     "@modelcontextprotocol/sdk": "^1.8.0",
     "@vscode/ripgrep": "^1.15.9",
     "cross-fetch": "^4.1.0",
+    "fastest-levenshtein": "^1.0.16",
     "glob": "^10.3.10",
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.23.5"
   },
   "devDependencies": {
     "@types/node": "^20.17.24",
+    "commander": "^14.0.0",
     "nexe": "^5.0.0-beta.4",
     "nodemon": "^3.0.2",
     "shx": "^0.3.4",

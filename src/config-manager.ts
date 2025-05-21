@@ -10,6 +10,10 @@ export interface ServerConfig {
   allowedDirectories?: string[];
   claudeCliPath?: string; // Absolute path to the Claude CLI executable
   claudeCliName?: string; // Name of the Claude CLI binary (e.g., 'claude', 'claude-custom')
+  fileWriteLineLimit?: number; // Line limit for file write operations
+  fileReadLineLimit?: number; // Default line limit for file read operations
+  maxLineCountLimit?: number; // Maximum line count in files (prevents memory issues)
+  binaryFileSizeLimit?: number; // Maximum size for binary files in bytes
   [key: string]: any; // Allow for arbitrary configuration keys
 }
 
@@ -123,7 +127,11 @@ class ConfigManager {
       defaultShell: os.platform() === 'win32' ? 'powershell.exe' : 'bash',
       allowedDirectories: [],
       claudeCliPath: undefined,
-      claudeCliName: 'claude'
+      claudeCliName: 'claude',
+      fileWriteLineLimit: 50,  // Default line limit for file write operations
+      fileReadLineLimit: 1000,  // Default line limit for file read operations
+      maxLineCountLimit: 1000000, // Maximum line count (1 million lines)
+      binaryFileSizeLimit: 10 * 1024 * 1024 // 10 MB limit for binary files
     };
   }
 
@@ -156,11 +164,49 @@ class ConfigManager {
   }
 
   /**
+   * Validate configuration values
+   * @param key Configuration key
+   * @param value Value to validate
+   * @returns Validated and possibly corrected value
+   */
+  private validateConfigValue(key: string, value: any): any {
+    // Validate line limits to ensure they are positive integers
+    if (key === 'fileReadLineLimit' || key === 'fileWriteLineLimit' || key === 'maxLineCountLimit' || key === 'binaryFileSizeLimit') {
+      // Convert to number if not already
+      const numValue = Number(value);
+      
+      // Check if it's a positive integer
+      if (isNaN(numValue) || !Number.isInteger(numValue) || numValue <= 0) {
+        console.warn(`Invalid value for ${key}: ${value}. Must be a positive integer. Using default.`);
+        // Return default values
+        return key === 'fileReadLineLimit' ? 1000 : 50;
+      }
+      return numValue;
+    }
+    
+    // Validate claudeCliPath to ensure it's absolute if provided
+    if (key === 'claudeCliPath' && value !== undefined && value !== null) {
+      if (typeof value !== 'string') {
+        console.warn(`Invalid value for ${key}: ${value}. Must be a string. Using default.`);
+        return undefined;
+      }
+      if (value && !path.isAbsolute(value)) {
+        console.warn(`Invalid value for ${key}: ${value}. Must be an absolute path. Using default.`);
+        return undefined;
+      }
+    }
+    
+    // For all other keys, return value as-is
+    return value;
+  }
+
+  /**
    * Set a specific configuration value
    */
   async setValue(key: string, value: any): Promise<void> {
     await this.init();
-    this.config[key] = value;
+    const validatedValue = this.validateConfigValue(key, value);
+    this.config[key] = validatedValue;
     await this.saveConfig();
   }
 
@@ -169,7 +215,14 @@ class ConfigManager {
    */
   async updateConfig(updates: Partial<ServerConfig>): Promise<ServerConfig> {
     await this.init();
-    this.config = { ...this.config, ...updates };
+    
+    // Validate each update value
+    const validatedUpdates: Partial<ServerConfig> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      validatedUpdates[key] = this.validateConfigValue(key, value);
+    }
+    
+    this.config = { ...this.config, ...validatedUpdates };
     await this.saveConfig();
     return { ...this.config };
   }

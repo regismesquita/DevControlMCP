@@ -38,6 +38,8 @@ export const KillProcessArgsSchema = z.object({
 export const ReadFileArgsSchema = z.object({
   path: z.string(),
   isUrl: z.boolean().optional().default(false),
+  offset: z.number().optional(), // Line number offset to start reading from
+  limit: z.number().optional(),  // Maximum number of lines to read
 });
 
 export const ReadMultipleFilesArgsSchema = z.object({

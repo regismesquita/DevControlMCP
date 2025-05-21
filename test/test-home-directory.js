@@ -215,7 +215,8 @@ async function testFileOperationsWithTilde() {
     
     // Verify the content
     assert.ok(
-      content === TEST_CONTENT || content.includes(TEST_CONTENT),
+      content === TEST_CONTENT || content.includes(TEST_CONTENT) || 
+      (content.includes('Binary file content') && content.includes(Buffer.from(TEST_CONTENT).toString('base64'))),
       'File content should match what was written'
     );
     

@@ -31,7 +31,40 @@ import {
 import {getConfig, setConfigValue} from './tools/config.js';
 
 import {VERSION} from './version.js';
-import {capture} from "./utils.js";
+import {trackToolCall} from "./utils/trackTools.js";
+
+/**
+ * Helper function to get tool description from environment variables or fall back to default.
+ * This function supports customizing tool descriptions through environment variables without
+ * modifying the codebase. Environment variables follow the naming convention:
+ * 
+ * MCP_DESC_<TOOLNAME> where <TOOLNAME> is the uppercase name of the tool
+ * 
+ * Example: For a tool named 'browser_preview', the env var would be 'MCP_DESC_BROWSER_PREVIEW'
+ * 
+ * @param toolName - The name of the tool (used to construct the environment variable name)
+ * @param defaultDescription - The default description to use if no valid override is found
+ * @returns The tool description to use (either custom from env var or the default)
+ */
+function getToolDescription(toolName: string, defaultDescription: string): string {
+    const envVarName = `MCP_DESC_${toolName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+    const customDescription = process.env[envVarName];
+    
+    // Maximum allowed description length (too long descriptions can cause UI issues)
+    const MAX_DESCRIPTION_LENGTH = 1000;
+    
+    // Use custom description if it exists and isn't just whitespace
+    if (customDescription !== undefined && customDescription.trim() !== '') {
+        // Validate description length
+        if (customDescription.length > MAX_DESCRIPTION_LENGTH) {
+            console.warn(`Tool description for ${toolName} exceeds maximum length of ${MAX_DESCRIPTION_LENGTH} characters. Description will be truncated.`);
+            return customDescription.substring(0, MAX_DESCRIPTION_LENGTH) + '... (truncated)';
+        }
+        return customDescription;
+    } else {
+        return defaultDescription;
+    }
+}
 
 console.error("Loading server.ts");
 
@@ -75,103 +108,142 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 // Configuration tools
                 {
                     name: "get_config",
-                    description:
-                        "Get the complete server configuration as JSON. Config includes fields for: blockedCommands (array of blocked shell commands), defaultShell (shell to use for commands), allowedDirectories (paths the server can access).",
+                    description: getToolDescription(
+                        "get_config",
+                        "Get the complete server configuration as JSON. Config includes fields for: blockedCommands (array of blocked shell commands), defaultShell (shell to use for commands), allowedDirectories (paths the server can access)."
+                    ),
                     inputSchema: zodToJsonSchema(GetConfigArgsSchema),
                 },
                 {
                     name: "set_config_value",
-                    description:
-                        "Set a specific configuration value by key. WARNING: Should be used in a separate chat from file operations and command execution to prevent security issues. Config keys include: blockedCommands (array), defaultShell (string), allowedDirectories (array of paths). IMPORTANT: Setting allowedDirectories to an empty array ([]) allows full access to the entire file system, regardless of the operating system.",
+                    description: getToolDescription(
+                        "set_config_value",
+                        "Set a specific configuration value by key. WARNING: Should be used in a separate chat from file operations and command execution to prevent security issues. Config keys include: blockedCommands (array), defaultShell (string), allowedDirectories (array of paths). IMPORTANT: Setting allowedDirectories to an empty array ([]) allows full access to the entire file system, regardless of the operating system."
+                    ),
                     inputSchema: zodToJsonSchema(SetConfigValueArgsSchema),
                 },
 
                 // Terminal tools
                 {
                     name: "execute_command",
-                    description:
-                        "Execute a terminal command with timeout. Command will continue running in background if it doesn't complete within timeout.",
+                    description: getToolDescription(
+                        "execute_command",
+                        "Execute a terminal command with timeout. Command will continue running in background if it doesn't complete within timeout."
+                    ),
                     inputSchema: zodToJsonSchema(ExecuteCommandArgsSchema),
                 },
                 {
                     name: "read_output",
-                    description: "Read new output from a running terminal session.",
+                    description: getToolDescription(
+                        "read_output",
+                        "Read new output from a running terminal session."
+                    ),
                     inputSchema: zodToJsonSchema(ReadOutputArgsSchema),
                 },
                 {
                     name: "force_terminate",
-                    description: "Force terminate a running terminal session.",
+                    description: getToolDescription(
+                        "force_terminate",
+                        "Force terminate a running terminal session."
+                    ),
                     inputSchema: zodToJsonSchema(ForceTerminateArgsSchema),
                 },
                 {
                     name: "list_sessions",
-                    description: "List all active terminal sessions.",
+                    description: getToolDescription(
+                        "list_sessions",
+                        "List all active terminal sessions."
+                    ),
                     inputSchema: zodToJsonSchema(ListSessionsArgsSchema),
                 },
                 {
                     name: "list_processes",
-                    description: "List all running processes. Returns process information including PID, command name, CPU usage, and memory usage.",
+                    description: getToolDescription(
+                        "list_processes",
+                        "List all running processes. Returns process information including PID, command name, CPU usage, and memory usage."
+                    ),
                     inputSchema: zodToJsonSchema(ListProcessesArgsSchema),
                 },
                 {
                     name: "kill_process",
-                    description: "Terminate a running process by PID. Use with caution as this will forcefully terminate the specified process.",
+                    description: getToolDescription(
+                        "kill_process",
+                        "Terminate a running process by PID. Use with caution as this will forcefully terminate the specified process."
+                    ),
                     inputSchema: zodToJsonSchema(KillProcessArgsSchema),
                 },
 
                 // Filesystem tools
                 {
                     name: "read_file",
-                    description:
-                        "Read the complete contents of a file from the file system or a URL. When reading from the file system, only works within allowed directories. Can fetch content from URLs when isUrl parameter is set to true. Handles text files normally and image files are returned as viewable images. Recognized image types: PNG, JPEG, GIF, WebP.",
+                    description: getToolDescription(
+                        "read_file",
+                        "Read the complete contents of a file from the file system or a URL. When reading from the file system, only works within allowed directories. Can fetch content from URLs when isUrl parameter is set to true. Handles text files normally and image files are returned as viewable images. Recognized image types: PNG, JPEG, GIF, WebP."
+                    ),
                     inputSchema: zodToJsonSchema(ReadFileArgsSchema),
                 },
                 {
                     name: "read_multiple_files",
-                    description:
-                        "Read the contents of multiple files simultaneously. Each file's content is returned with its path as a reference. Handles text files normally and renders images as viewable content. Recognized image types: PNG, JPEG, GIF, WebP. Failed reads for individual files won't stop the entire operation. Only works within allowed directories.",
+                    description: getToolDescription(
+                        "read_multiple_files",
+                        "Read the contents of multiple files simultaneously. Each file's content is returned with its path as a reference. Handles text files normally and renders images as viewable content. Recognized image types: PNG, JPEG, GIF, WebP. Failed reads for individual files won't stop the entire operation. Only works within allowed directories."
+                    ),
                     inputSchema: zodToJsonSchema(ReadMultipleFilesArgsSchema),
                 },
                 {
                     name: "write_file",
-                    description:
-                        "Completely replace file contents. Best for large changes (>20% of file) or when edit_block fails. Use with caution as it will overwrite existing files. Only works within allowed directories.",
+                    description: getToolDescription(
+                        "write_file",
+                        "Completely replace file contents. Best for large changes (>20% of file) or when edit_block fails. Use with caution as it will overwrite existing files. Only works within allowed directories."
+                    ),
                     inputSchema: zodToJsonSchema(WriteFileArgsSchema),
                 },
                 {
                     name: "create_directory",
-                    description:
-                        "Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. Only works within allowed directories.",
+                    description: getToolDescription(
+                        "create_directory",
+                        "Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. Only works within allowed directories."
+                    ),
                     inputSchema: zodToJsonSchema(CreateDirectoryArgsSchema),
                 },
                 {
                     name: "list_directory",
-                    description:
-                        "Get a detailed listing of all files and directories in a specified path. Results distinguish between files and directories with [FILE] and [DIR] prefixes. Only works within allowed directories.",
+                    description: getToolDescription(
+                        "list_directory",
+                        "Get a detailed listing of all files and directories in a specified path. Results distinguish between files and directories with [FILE] and [DIR] prefixes. Only works within allowed directories."
+                    ),
                     inputSchema: zodToJsonSchema(ListDirectoryArgsSchema),
                 },
                 {
                     name: "move_file",
-                    description:
-                        "Move or rename files and directories. Can move files between directories and rename them in a single operation. Both source and destination must be within allowed directories.",
+                    description: getToolDescription(
+                        "move_file",
+                        "Move or rename files and directories. Can move files between directories and rename them in a single operation. Both source and destination must be within allowed directories."
+                    ),
                     inputSchema: zodToJsonSchema(MoveFileArgsSchema),
                 },
                 {
                     name: "search_files",
-                    description:
-                        "Finds files by name using a case-insensitive substring matching. Searches through all subdirectories from the starting path. Has a default timeout of 30 seconds which can be customized using the timeoutMs parameter. Only searches within allowed directories.",
+                    description: getToolDescription(
+                        "search_files",
+                        "Finds files by name using a case-insensitive substring matching. Searches through all subdirectories from the starting path. Has a default timeout of 30 seconds which can be customized using the timeoutMs parameter. Only searches within allowed directories."
+                    ),
                     inputSchema: zodToJsonSchema(SearchFilesArgsSchema),
                 },
                 {
                     name: "search_code",
-                    description:
-                        "Search for text/code patterns within file contents using ripgrep. Fast and powerful search similar to VS Code search functionality. Supports regular expressions, file pattern filtering, and context lines. Has a default timeout of 30 seconds which can be customized. Only searches within allowed directories.",
+                    description: getToolDescription(
+                        "search_code",
+                        "Search for text/code patterns within file contents using ripgrep. Fast and powerful search similar to VS Code search functionality. Supports regular expressions, file pattern filtering, and context lines. Has a default timeout of 30 seconds which can be customized. Only searches within allowed directories."
+                    ),
                     inputSchema: zodToJsonSchema(SearchCodeArgsSchema),
                 },
                 {
                     name: "get_file_info",
-                    description:
-                        "Retrieve detailed metadata about a file or directory including size, creation time, last modified time, permissions, and type. Only works within allowed directories.",
+                    description: getToolDescription(
+                        "get_file_info",
+                        "Retrieve detailed metadata about a file or directory including size, creation time, last modified time, permissions, and type. Only works within allowed directories."
+                    ),
                     inputSchema: zodToJsonSchema(GetFileInfoArgsSchema),
                 },
                 // Note: list_allowed_directories removed - use get_config to check allowedDirectories
@@ -179,8 +251,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 // Text editing tools
                 {
                     name: "edit_block",
-                    description:
-                        "Apply surgical text replacements to files. Best for small changes (<20% of file size). Call repeatedly to change multiple blocks. Will verify changes after application. Format:\nfilepath\n<<<<<<< SEARCH\ncontent to find\n=======\nnew content\n>>>>>>> REPLACE",
+                    description: getToolDescription(
+                        "edit_block",
+                        "Apply surgical text replacements to files. Best for small changes (<20% of file size). Call repeatedly to change multiple blocks. Will verify changes after application. Format:\nfilepath\n<<<<<<< SEARCH\ncontent to find\n=======\nnew content\n>>>>>>> REPLACE"
+                    ),
                     inputSchema: zodToJsonSchema(EditBlockArgsSchema),
                 },
 
@@ -205,7 +279,8 @@ import {ServerResult} from './types.js';
 server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest): Promise<ServerResult> => {
     try {
         const {name, arguments: args} = request.params;
-        // Telemetry removed
+        // Log tool call for auditing
+        await trackToolCall(name, args);
 
         // Using a more structured approach with dedicated handlers
         switch (name) {
@@ -214,7 +289,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
                 try {
                     return await getConfig();
                 } catch (error) {
-                    capture('server_request_error', {message: `Error in get_config handler: ${error}`});
+                    console.error(`Error in get_config handler: ${error}`);
                     return {
                         content: [{type: "text", text: `Error: Failed to get configuration`}],
                         isError: true,
@@ -224,7 +299,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
                 try {
                     return await setConfigValue(args);
                 } catch (error) {
-                    capture('server_request_error', {message: `Error in set_config_value handler: ${error}`});
+                    console.error(`Error in set_config_value handler: ${error}`);
                     return {
                         content: [{type: "text", text: `Error: Failed to set configuration value`}],
                         isError: true,
