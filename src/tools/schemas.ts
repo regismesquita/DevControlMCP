@@ -88,3 +88,10 @@ export const SearchCodeArgsSchema = z.object({
 export const EditBlockArgsSchema = z.object({
   blockContent: z.string(),
 });
+
+// Claude Code tool schema
+export const ClaudeCodeArgsSchema = z.object({
+  prompt: z.string(),
+  workFolder: z.string().optional(),
+  tools: z.array(z.string()).optional(),
+});

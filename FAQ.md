@@ -27,11 +27,13 @@ This document provides answers to the most commonly asked questions about DevCon
   - [Can it help me understand complex codebases?](#can-it-help-me-understand-complex-codebases)
   - [How does it handle long-running commands?](#how-does-it-handle-long-running-commands)
   - [Can I use it for non-coding tasks?](#can-i-use-it-for-non-coding-tasks)
+  - [What is the claude_code tool and when should I use it?](#what-is-the-claude_code-tool-and-when-should-i-use-it)
 
 - [Security & Permissions](#security--permissions)
   - [Is it safe to give Claude access to my file system?](#is-it-safe-to-give-claude-access-to-my-file-system)
   - [Can I control which directories Claude can access?](#can-i-control-which-directories-claude-can-access)
   - [What commands are blocked by default?](#what-commands-are-blocked-by-default)
+  - [How does the claude_code tool interact with DevControlMCP's permissions?](#how-does-the-claude_code-tool-interact-with-devcontrolmcps-permissions)
 
 - [Usage Scenarios](#usage-scenarios)
   - [Is it suitable for large codebases?](#is-it-suitable-for-large-codebases)
@@ -106,6 +108,7 @@ You'll need:
 - Node.js version 18 or higher installed on your system
 - Claude Desktop installed and running
 - A Claude Pro subscription ($20/month)
+- Claude CLI installed globally (optional, for `claude_code` tool) - install with `npm run install:claude-cli`
 
 ### How do I install DevControlMCP?
 
@@ -256,6 +259,38 @@ Absolutely. While it excels at coding-related tasks, Claude DevControlMCP can be
 - Running and managing any terminal-based tools
 - Data processing and analysis
 
+### What is the claude_code tool and when should I use it?
+
+The `claude_code` tool is a "meta-tool" that allows DevControlMCP to delegate complex tasks directly to Claude Code CLI instances. It's essentially Claude calling another Claude instance with specialized capabilities.
+
+**When to use `claude_code`:**
+- **Complex multi-step tasks**: When you need a sequence of operations that would normally require multiple tool calls
+- **Advanced Git workflows**: Complex branching, merging, rebasing, or repository management
+- **Specialized Claude Code features**: Tasks that benefit from Claude Code's specific capabilities like advanced web research
+- **Terminal command sequences**: When you need to run multiple related commands in a specific context
+- **Large refactoring tasks**: When you need to make coordinated changes across many files
+
+**Example use cases:**
+```json
+{
+  "prompt": "Set up a new React project with TypeScript, configure ESLint and Prettier, and create a basic component structure",
+  "workFolder": "/Users/username/projects/my-app",
+  "tools": ["Bash", "Read", "Write", "Edit"]
+}
+```
+
+**Benefits:**
+- Leverages Claude Code's specialized capabilities
+- Can handle complex workflows that would be challenging with individual tools
+- Provides access to Claude Code's web search and research capabilities
+- Allows for more sophisticated decision-making in multi-step processes
+
+**Important considerations:**
+- Requires Claude CLI to be installed and configured (`npm run install:claude-cli`)
+- Bypasses DevControlMCP's permission system (operates with full system access)
+- Best suited for users comfortable with the security implications
+- May incur higher token usage for complex tasks
+
 ## Security & Permissions
 
 ### Is it safe to give Claude access to my file system?
@@ -275,6 +310,41 @@ Recent updates have removed path limitations, and work is in progress to add con
 ### What commands are blocked by default?
 
 Claude DevControlMCP doesn't have a pre-defined blocklist, but you can use the `block_command` and `unblock_command` functions to manage which commands Claude can execute. It's recommended to block commands that could potentially be destructive, such as `rm -rf` or `format`.
+
+### How does the claude_code tool interact with DevControlMCP's permissions?
+
+The `claude_code` tool operates differently from other DevControlMCP tools regarding permissions:
+
+**⚠️ Important Security Note:**
+- The `claude_code` tool **bypasses** DevControlMCP's internal permission system (`allowedDirectories`, `blockedCommands`)
+- It delegates tasks to an external Claude CLI process that runs with `--dangerously-skip-permissions`
+- This means it has full system access regardless of your DevControlMCP configuration
+
+**Setup Requirements:**
+1. Install Claude CLI: `npm run install:claude-cli`
+2. One-time setup: Run `claude --dangerously-skip-permissions` and accept the prompts
+3. After setup, the tool works without further permission prompts
+
+**When to Use:**
+- Complex multi-step coding tasks that require multiple tool interactions
+- Advanced Git operations and terminal command sequences
+- Tasks that benefit from Claude Code's specialized capabilities
+- When you need to delegate entire workflows to a Claude instance
+
+**Security Considerations:**
+- Only use this tool when you trust the prompts you're giving it
+- Be especially careful with system-wide operations
+- Consider the tool as having the same permissions as running `claude` CLI directly
+- The tool is designed for advanced users who understand the security implications
+
+**Configuration:**
+You can configure the Claude CLI path in your DevControlMCP config:
+```json
+{
+  "claudeCliPath": "/custom/path/to/claude",
+  "claudeCliName": "claude-custom"
+}
+```
 
 ## Usage Scenarios
 

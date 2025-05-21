@@ -31,6 +31,7 @@
     "setup:debug": "npm install && npm run build && node setup-claude-server.js --debug",
     "prepare": "npm run build",
     "test": "node test/run-all-tests.js",
+    "install:claude-cli": "npm install -g @anthropic-ai/claude-code && echo \"Claude Code CLI installed. IMPORTANT: Remember to run 'claude --dangerously-skip-permissions' manually once in your terminal to accept permissions.\"",
     "link:local": "npm run build && npm link",
     "unlink:local": "npm unlink",
     "inspector": "npx @modelcontextprotocol/inspector dist/index.js"

@@ -8,6 +8,8 @@ export interface ServerConfig {
   blockedCommands?: string[];
   defaultShell?: string;
   allowedDirectories?: string[];
+  claudeCliPath?: string; // Absolute path to the Claude CLI executable
+  claudeCliName?: string; // Name of the Claude CLI binary (e.g., 'claude', 'claude-custom')
   [key: string]: any; // Allow for arbitrary configuration keys
 }
 
@@ -119,7 +121,9 @@ class ConfigManager {
         "takeown"    // Take ownership of files
       ],
       defaultShell: os.platform() === 'win32' ? 'powershell.exe' : 'bash',
-      allowedDirectories: []
+      allowedDirectories: [],
+      claudeCliPath: undefined,
+      claudeCliName: 'claude'
     };
   }
 
