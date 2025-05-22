@@ -317,7 +317,7 @@ async function testPermissionDetection() {
     // Should get an error, but not the permission acceptance error
     if (result.isError) {
       const errorText = result.content[0].text;
-      if (errorText.includes('dangerously-skip-permissions') && errorText.includes('accept')) {
+      if (errorText.includes('permission') && errorText.includes('accept')) {
         console.log('✓ Permission detection logic correctly identified permission prompt');
       } else {
         console.log('✓ Permission detection logic executed (different error as expected)');

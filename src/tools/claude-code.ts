@@ -117,7 +117,7 @@ async function spawnClaudeCliProcess(command: string, args: string[], options?: 
 export async function callClaudeCode(prompt: string, workFolder?: string, tools?: string[]): Promise<ServerResult> {
   try {
     const claudeCliExecutable = await findClaudeCliExecutable();
-    const cliArgs: string[] = ['--dangerously-skip-permissions', '-p', prompt];
+    const cliArgs: string[] = ['-p', prompt];
 
     if (tools && tools.length > 0) {
       cliArgs.push('--allowedTools', ...tools);
@@ -147,7 +147,7 @@ export async function callClaudeCode(prompt: string, workFolder?: string, tools?
     );
 
     // Check for specific permission acceptance message in stderr
-    if (stderr.includes("--dangerously-skip-permissions") && stderr.includes("accept")) {
+    if (stderr.includes("permission") && stderr.includes("accept")) {
       return createErrorResponse(
         `Claude Code CLI requires one-time permission acceptance. Please run ` +
         `"${claudeCliExecutable} --dangerously-skip-permissions" in your terminal, ` +

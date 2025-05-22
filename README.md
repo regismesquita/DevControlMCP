@@ -49,7 +49,7 @@ claude --dangerously-skip-permissions
 # Follow the prompts to accept permissions
 ```
 
-**Note**: The `--dangerously-skip-permissions` flag is required for the `claude_code` tool to function without interactive prompts.
+**Note**: You need to run `claude --dangerously-skip-permissions` once manually to accept permissions. After this one-time setup, the `claude_code` tool will use `claude -p` for MCP server calls without requiring the skip permissions flag.
 
 ### Logging Utilities
 
@@ -158,7 +158,7 @@ Configure Claude CLI paths in your DevControlMCP config:
 
 ### Security Note
 
-⚠️ **IMPORTANT**: The `claude_code` tool bypasses DevControlMCP's internal permission system (`allowedDirectories`, `blockedCommands`) because it delegates to an external Claude CLI process. The Claude CLI operates with its own (skipped) permissions.
+⚠️ **IMPORTANT**: The `claude_code` tool bypasses DevControlMCP's internal permission system (`allowedDirectories`, `blockedCommands`) because it delegates to an external Claude CLI process. The Claude CLI operates with its own permissions that were accepted during the one-time setup.
 
 ## Configuration Options
 
@@ -208,7 +208,7 @@ These environment variables can be set in your shell profile for persistence or 
 - Set `allowedDirectories` to control filesystem access for most tools
 - Be cautious when running terminal commands as they have full access to your system
 - Use a separate chat for configuration changes
-- **`claude_code` tool**: Bypasses internal permission controls and delegates to Claude CLI with `--dangerously-skip-permissions`
+- **`claude_code` tool**: Bypasses internal permission controls and delegates to Claude CLI (requires one-time permission acceptance)
 - Monitor the audit logs regularly to track tool usage
 - Set appropriate limits for binary file size and line reading to prevent memory exhaustion
 - This tool can completely destroy your system, files, projects and even worse... so be careful. By default, DevControlMCP tools have broad permissions. The `claude_code` tool, in particular, operates with full system access by design, bypassing DevControlMCP's specific permission settings.
