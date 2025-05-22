@@ -120,7 +120,7 @@ export async function callClaudeCode(prompt: string, workFolder?: string, tools?
     const cliArgs: string[] = ['--dangerously-skip-permissions', '-p', prompt];
 
     if (tools && tools.length > 0) {
-      cliArgs.push('--tools', tools.join(','));
+      cliArgs.push('--allowedTools', ...tools);
     }
 
     // Determine effective working directory
