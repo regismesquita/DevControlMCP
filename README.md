@@ -38,12 +38,10 @@ npm run setup
 ```
 
 ### Claude CLI Setup (Optional)
-The `claude_code` tool requires the Claude CLI to be installed and configured:
+
+The `claude_code` tool requires the Claude CLI to be installed locally (run it and call `/doctor`) and `-dangerously-skip-permissions` accepted.
 
 ```bash
-# Install Claude CLI
-npm run install:claude-cli
-
 # One-time permission acceptance (required)
 claude --dangerously-skip-permissions
 # Follow the prompts to accept permissions
