@@ -34,17 +34,30 @@ DevControlMCP implements a permission system for most tools:
 ### Claude Code Meta-Tool
 The `claude_code` tool operates with a **different security model**:
 
-⚠️ **IMPORTANT**: The `claude_code` tool bypasses DevControlMCP's internal permission system because it delegates to an external Claude CLI process running with `--dangerously-skip-permissions`.
+⚠️ **IMPORTANT**: The `claude_code` tool bypasses DevControlMCP's internal permission system because it delegates to an external Claude CLI process. Users must run `claude --dangerously-skip-permissions` manually in a separate terminal to accept permissions before using this tool.
 
 **How it works:**
-1. Spawns external `claude` CLI process with `--dangerously-skip-permissions`
-2. Passes prompt and optional parameters (workFolder, tools)
-3. Returns stdout from the Claude CLI execution
-4. Operates independently of `allowedDirectories` and `blockedCommands`
+1. Uses TerminalManager to execute Claude CLI as a shell command
+2. Initial 30-second timeout determines if task runs asynchronously
+3. For long-running tasks: Returns PID immediately for monitoring
+4. For quick tasks: Returns complete output directly
+5. No maximum lifetime timeout - jobs run indefinitely until completion
+6. Operates independently of `allowedDirectories` and `blockedCommands`
+
+**Async Job Management:**
+- Tasks exceeding 30 seconds return a PID for status monitoring
+- Use `read_output` with PID to check progress and get incremental output
+- Use `force_terminate` with PID to stop long-running jobs
+- Completed jobs store final output accessible via `read_output`
 
 **Configuration:**
 - `claudeCliPath`: Absolute path to Claude CLI executable
 - `claudeCliName`: Name of Claude CLI binary (defaults to 'claude')
+
+**Path Resolution Priority:**
+1. `claudeCliPath` from config (if absolute path exists)
+2. Default local installation at `~/.claude/local/claude`
+3. Falls back to `claudeCliName` in system PATH
 
 **Use Cases:**
 - Complex multi-step coding tasks
@@ -52,6 +65,7 @@ The `claude_code` tool operates with a **different security model**:
 - Terminal command sequences
 - Tasks requiring Claude Code's specialized capabilities
 - Large refactoring projects
+- Long-running analysis or refactoring operations
 
 ## Development Guidelines
 
@@ -73,6 +87,7 @@ The `claude_code` tool operates with a **different security model**:
 2. **Claude Code Tool**: Understand it bypasses internal permissions - use responsibly
 3. **Error Messages**: Provide clear, actionable feedback without exposing sensitive information
 4. **Path Validation**: Always use absolute paths, validate directory existence
+5. **Shell Command Safety**: Use `escapeShellArg()` and `buildShellCommand()` utilities from `utils/shell-escape.ts` for safe command construction
 
 ## Tool Usage Patterns
 

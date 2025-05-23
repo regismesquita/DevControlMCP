@@ -54,6 +54,11 @@ This document provides answers to the most commonly asked questions about DevCon
   - [How does this compare to VSCode extensions like Cline?](#how-does-this-compare-to-vscode-extensions-like-cline)
   - [Is this better than using Jupyter notebooks with Claude?](#is-this-better-than-using-jupyter-notebooks-with-claude)
 
+- [Migration Guide](#migration-guide)
+  - [What tools have been deprecated in v0.3.0?](#what-tools-have-been-deprecated-in-v030)
+  - [How do I migrate from the old tools to the new ones?](#how-do-i-migrate-from-the-old-tools-to-the-new-ones)
+  - [Why were these changes made?](#why-were-these-changes-made)
+
 ---
 
 ## General Information
@@ -195,7 +200,7 @@ The tool enables a wide range of tasks:
 
 ### How does it handle file editing and URL content?
 
-DevControlMCP provides two main approaches to file editing and supports URL content:
+DevControlMCP provides multiple approaches to file manipulation and web content:
 
 1. **Surgical text replacements (`edit_block`):**
    - Best for small changes (<20% of file size)
@@ -210,16 +215,28 @@ DevControlMCP provides two main approaches to file editing and supports URL cont
    >>>>>>> REPLACE
    ```
 
-2. **Complete file rewrites (`write_file`):**
-   - Best for large changes (>20% of file size) or when edit_block fails
-   - Replaces the entire content of a file
+2. **Batch file operations (`write` tool):**
+   - Unified tool for all file write operations
+   - Supports multiple operations in a single transaction:
+     - `put`: Write or append file content (text or base64)
+     - `mkdir`: Create directories with optional recursive creation
+     - `copy`: Copy files or directories
+     - `move`: Move or rename files/directories
+     - `delete`: Remove files or directories
+     - `touch`: Create empty files or update timestamps
+   - Each operation succeeds/fails independently with detailed error reporting
 
-3. **URL content retrieval (`read_file` with `isUrl: true`):**
-   - Fetch content from web resources
-   - Supports both text and image content from URLs
-   - Uses a 30-second timeout to prevent hanging on slow connections
+3. **Web content retrieval (`fetch_url`):**
+   - Dedicated tool for fetching web content
+   - HTML to Markdown conversion using Mozilla's Readability
+   - Image compression for large images
+   - Support for partial content fetching
+   - 30-second default timeout
 
-It also supports pattern-based replacements across multiple files.
+4. **Advanced file search (`find`):**
+   - Powerful search with glob patterns, content matching, and metadata filters
+   - Combines multiple criteria with AND logic
+   - Replaces the old `search_files` tool with more capabilities
 
 ### Can it help me understand complex codebases?
 
@@ -487,3 +504,134 @@ Jupyter notebooks and Claude DevControlMCP serve different purposes:
 - More structured for educational purposes
 
 For data science or analysis projects, you might use both: Claude DevControlMCP for system tasks and code management, and Jupyter for interactive exploration and visualization.
+
+## Migration Guide
+
+### What tools have been deprecated in v0.3.0?
+
+The following tools have been removed and replaced with more capable alternatives:
+
+**Deprecated Tools:**
+- `write_file` - Replaced by the `write` tool's `put` operation
+- `create_directory` - Replaced by the `write` tool's `mkdir` operation  
+- `move_file` - Replaced by the `write` tool's `move` operation
+- `search_files` - Replaced by the more powerful `find` tool
+- URL support in `read_file` - Now use the dedicated `fetch_url` tool
+
+### How do I migrate from the old tools to the new ones?
+
+Here's a quick migration guide for each deprecated tool:
+
+**1. From `write_file` to `write` tool:**
+```json
+// Old way
+{
+  "tool": "write_file",
+  "path": "/path/to/file.txt",
+  "content": "File content"
+}
+
+// New way
+{
+  "tool": "write",
+  "operations": [{
+    "type": "put",
+    "path": "/path/to/file.txt",
+    "content": "File content"
+  }]
+}
+```
+
+**2. From `create_directory` to `write` tool:**
+```json
+// Old way
+{
+  "tool": "create_directory",
+  "path": "/path/to/new/directory"
+}
+
+// New way
+{
+  "tool": "write",
+  "operations": [{
+    "type": "mkdir",
+    "path": "/path/to/new/directory",
+    "recursive": true
+  }]
+}
+```
+
+**3. From `move_file` to `write` tool:**
+```json
+// Old way
+{
+  "tool": "move_file",
+  "source": "/path/from/file.txt",
+  "destination": "/path/to/file.txt"
+}
+
+// New way
+{
+  "tool": "write",
+  "operations": [{
+    "type": "move",
+    "source": "/path/from/file.txt",
+    "destination": "/path/to/file.txt",
+    "overwrite": true
+  }]
+}
+```
+
+**4. From `search_files` to `find` tool:**
+```json
+// Old way
+{
+  "tool": "search_files",
+  "path": "/path/to/search",
+  "pattern": "test"
+}
+
+// New way
+{
+  "tool": "find",
+  "base_path": "/path/to/search",
+  "recursive": true,
+  "match_criteria": [{
+    "type": "name_pattern",
+    "pattern": "*test*"
+  }]
+}
+```
+
+**5. From `read_file` with URL to `fetch_url`:**
+```json
+// Old way
+{
+  "tool": "read_file",
+  "path": "https://example.com/page",
+  "isUrl": true
+}
+
+// New way
+{
+  "tool": "fetch_url",
+  "url": "https://example.com/page",
+  "format": "markdown"
+}
+```
+
+### Why were these changes made?
+
+The new tools provide several advantages:
+
+1. **Batch Operations**: The `write` tool allows multiple file operations in a single call, reducing the number of tool invocations needed for complex tasks.
+
+2. **More Powerful Search**: The `find` tool combines name patterns (with glob support), content search (with regex), and metadata filtering, making it much more capable than the simple substring matching of `search_files`.
+
+3. **Better Web Content Handling**: The dedicated `fetch_url` tool provides HTML to Markdown conversion, image compression, and better error handling specifically designed for web content.
+
+4. **Consistency**: All file write operations are now handled through a single, unified interface, making the API more predictable and easier to use.
+
+5. **Error Handling**: Each operation in a batch can succeed or fail independently, providing more granular error reporting and partial success scenarios.
+
+These changes were inspired by the ConduitMCP project, which demonstrated more efficient patterns for file and web operations.

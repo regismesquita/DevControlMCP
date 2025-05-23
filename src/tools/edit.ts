@@ -1,5 +1,6 @@
-import { readFile, writeFile } from './filesystem.js';
+import { readFile } from './filesystem.js';
 import { ServerResult } from '../types.js';
+import * as fs from 'fs/promises';
 
 interface SearchReplace {
     search: string;
@@ -8,12 +9,20 @@ interface SearchReplace {
 
 export async function performSearchReplace(filePath: string, block: SearchReplace): Promise<ServerResult> {
     // Read file as plain string (don't pass true to get just the string)
-    const {content} = await readFile(filePath);
+    const fileResult = await readFile(filePath);
+    let content = fileResult.content;
     
     // Make sure content is a string
-    if( typeof content !== 'string') {
+    if (typeof content !== 'string') {
         throw new Error('Wrong content for file ' + filePath);
-    };
+    }
+    
+    // Handle base64 encoded content
+    if (content.startsWith('Binary file content (base64 encoded):\n')) {
+        // Extract and decode the base64 content
+        const base64Content = content.replace('Binary file content (base64 encoded):\n', '');
+        content = Buffer.from(base64Content, 'base64').toString('utf-8');
+    }
     
     // Find first occurrence
     const searchIndex = content.indexOf(block.search);
@@ -29,7 +38,7 @@ export async function performSearchReplace(filePath: string, block: SearchReplac
         block.replace + 
         content.substring(searchIndex + block.search.length);
 
-    await writeFile(filePath, newContent);
+    await fs.writeFile(filePath, newContent, 'utf-8');
 
     return {
         content: [{ type: "text", text: `Successfully applied edit to ${filePath}` }],

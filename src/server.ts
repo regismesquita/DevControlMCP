@@ -15,11 +15,7 @@ import {
     KillProcessArgsSchema,
     ReadFileArgsSchema,
     ReadMultipleFilesArgsSchema,
-    WriteFileArgsSchema,
-    CreateDirectoryArgsSchema,
     ListDirectoryArgsSchema,
-    MoveFileArgsSchema,
-    SearchFilesArgsSchema,
     GetFileInfoArgsSchema,
     EditBlockArgsSchema,
     SearchCodeArgsSchema,
@@ -27,6 +23,9 @@ import {
     SetConfigValueArgsSchema,
     ListProcessesArgsSchema,
     ClaudeCodeArgsSchema,
+    FetchUrlArgsSchema,
+    FindArgsSchema,
+    WriteArgsSchema,
 } from './tools/schemas.js';
 import {getConfig, setConfigValue} from './tools/config.js';
 
@@ -178,7 +177,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                     name: "read_file",
                     description: getToolDescription(
                         "read_file",
-                        "Read the complete contents of a file from the file system or a URL. When reading from the file system, only works within allowed directories. Can fetch content from URLs when isUrl parameter is set to true. Handles text files normally and image files are returned as viewable images. Recognized image types: PNG, JPEG, GIF, WebP."
+                        "Read the complete contents of a file from the file system. Only works within allowed directories. Handles text files normally and image files are returned as viewable images. Recognized image types: PNG, JPEG, GIF, WebP."
                     ),
                     inputSchema: zodToJsonSchema(ReadFileArgsSchema),
                 },
@@ -191,44 +190,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                     inputSchema: zodToJsonSchema(ReadMultipleFilesArgsSchema),
                 },
                 {
-                    name: "write_file",
-                    description: getToolDescription(
-                        "write_file",
-                        "Completely replace file contents. Best for large changes (>20% of file) or when edit_block fails. Use with caution as it will overwrite existing files. Only works within allowed directories."
-                    ),
-                    inputSchema: zodToJsonSchema(WriteFileArgsSchema),
-                },
-                {
-                    name: "create_directory",
-                    description: getToolDescription(
-                        "create_directory",
-                        "Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. Only works within allowed directories."
-                    ),
-                    inputSchema: zodToJsonSchema(CreateDirectoryArgsSchema),
-                },
-                {
                     name: "list_directory",
                     description: getToolDescription(
                         "list_directory",
                         "Get a detailed listing of all files and directories in a specified path. Results distinguish between files and directories with [FILE] and [DIR] prefixes. Only works within allowed directories."
                     ),
                     inputSchema: zodToJsonSchema(ListDirectoryArgsSchema),
-                },
-                {
-                    name: "move_file",
-                    description: getToolDescription(
-                        "move_file",
-                        "Move or rename files and directories. Can move files between directories and rename them in a single operation. Both source and destination must be within allowed directories."
-                    ),
-                    inputSchema: zodToJsonSchema(MoveFileArgsSchema),
-                },
-                {
-                    name: "search_files",
-                    description: getToolDescription(
-                        "search_files",
-                        "Finds files by name using a case-insensitive substring matching. Searches through all subdirectories from the starting path. Has a default timeout of 30 seconds which can be customized using the timeoutMs parameter. Only searches within allowed directories."
-                    ),
-                    inputSchema: zodToJsonSchema(SearchFilesArgsSchema),
                 },
                 {
                     name: "search_code",
@@ -264,6 +231,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                     description:
                         "Executes a prompt directly using the Claude Code CLI with permissions bypassed. This tool provides access to Claude Code's full capabilities including file operations, Git, terminal commands, and web search. Use 'workFolder' for contextual execution and 'tools' to specify which Claude tools to enable (e.g., ['Bash', 'Read', 'Write']). Requires Claude CLI to be installed and permissions accepted manually once with 'claude --dangerously-skip-permissions'. WARNING: This tool bypasses DevControlMCP's internal permission system as it delegates to an external CLI process.",
                     inputSchema: zodToJsonSchema(ClaudeCodeArgsSchema),
+                },
+
+                // Web and enhanced tools
+                {
+                    name: "fetch_url",
+                    description: getToolDescription(
+                        "fetch_url",
+                        "Fetch content from a URL. Supports HTML to Markdown conversion (best for articles/blogs), image compression, and partial content fetching. Limits: 10MB max download, 1MB image compression threshold, 30s default timeout. Returns content as text, markdown, or base64-encoded images. Has Readability fallback for content extraction."
+                    ),
+                    inputSchema: zodToJsonSchema(FetchUrlArgsSchema),
+                },
+                {
+                    name: "find",
+                    description: getToolDescription(
+                        "find",
+                        "Advanced file search with support for name patterns (glob), content patterns (text/regex), and metadata filters (size, dates, type, MIME type). Combines criteria with AND logic. Limits: 1000 max results, depth 10. Note: For high-performance code search, prefer search_code which uses ripgrep. Only searches within allowed directories."
+                    ),
+                    inputSchema: zodToJsonSchema(FindArgsSchema),
+                },
+                {
+                    name: "write",
+                    description: getToolDescription(
+                        "write",
+                        "Batch write operations supporting multiple file operations in a single call. Operations: put (write file), mkdir (create directory), copy, move, delete, touch. Each operation succeeds/fails independently with detailed per-operation feedback, allowing partial success. Only works within allowed directories."
+                    ),
+                    inputSchema: zodToJsonSchema(WriteArgsSchema),
                 },
             ],
         };
@@ -333,20 +326,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
             case "read_multiple_files":
                 return await handlers.handleReadMultipleFiles(args);
 
-            case "write_file":
-                return await handlers.handleWriteFile(args);
-
-            case "create_directory":
-                return await handlers.handleCreateDirectory(args);
-
             case "list_directory":
                 return await handlers.handleListDirectory(args);
-
-            case "move_file":
-                return await handlers.handleMoveFile(args);
-
-            case "search_files":
-                return await handlers.handleSearchFiles(args);
 
             case "search_code":
                 return await handlers.handleSearchCode(args);
@@ -359,6 +340,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
 
             case "claude_code":
                 return await handlers.handleClaudeCode(args);
+
+            // New enhanced tools
+            case "fetch_url":
+                return await handlers.handleFetchUrl(args);
+                
+            case "find":
+                return await handlers.handleFind(args);
+                
+            case "write":
+                return await handlers.handleWrite(args);
 
             default:
                 // Telemetry removed

@@ -1,7 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
 import os from 'os';
-import fetch from 'cross-fetch';
 import {withTimeout} from '../utils.js';
 import {configManager} from '../config-manager.js';
 
@@ -183,61 +182,6 @@ export interface FileResult {
 
 
 /**
- * Read file content from a URL
- * @param url URL to fetch content from
- * @returns File content or file result with metadata
- */
-export async function readFileFromUrl(url: string): Promise<FileResult> {
-    // Import the MIME type utilities
-    const { isImageFile } = await import('./mime-types.js');
-    
-    // Set up fetch with timeout
-    const FETCH_TIMEOUT_MS = 30000;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    
-    try {
-        const response = await fetch(url, {
-            signal: controller.signal
-        });
-        
-        // Clear the timeout since fetch completed
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        // Get MIME type from Content-Type header
-        const contentType = response.headers.get('content-type') || 'text/plain';
-        const isImage = isImageFile(contentType);
-        
-        if (isImage) {
-            // For images, convert to base64
-            const buffer = await response.arrayBuffer();
-            const content = Buffer.from(buffer).toString('base64');
-            
-            return { content, mimeType: contentType, isImage };
-        } else {
-            // For text content
-            const content = await response.text();
-            
-            return { content, mimeType: contentType, isImage };
-        }
-    } catch (error) {
-        // Clear the timeout to prevent memory leaks
-        clearTimeout(timeoutId);
-        
-        // Return error information instead of throwing
-        const errorMessage = error instanceof DOMException && error.name === 'AbortError'
-            ? `URL fetch timed out after ${FETCH_TIMEOUT_MS}ms: ${url}`
-            : `Failed to fetch URL: ${error instanceof Error ? error.message : String(error)}`;
-
-        throw new Error(errorMessage);
-    }
-}
-
-/**
  * Read file content from the local filesystem
  * @param filePath Path to the file
  * @param offset Optional line offset to start reading from
@@ -373,23 +317,16 @@ export async function readFileFromDisk(filePath: string, offset?: number, limit?
 }
 
 /**
- * Read a file from either the local filesystem or a URL
- * @param filePath Path to the file or URL
- * @param isUrl Whether the path is a URL
+ * Read a file from the local filesystem
+ * @param filePath Path to the file
  * @param offset Optional line offset to start reading from
  * @param limit Optional maximum number of lines to read
  * @returns File content or file result with metadata
  */
-export async function readFile(filePath: string, isUrl?: boolean, offset?: number, limit?: number): Promise<FileResult> {
-    return isUrl 
-        ? readFileFromUrl(filePath)
-        : readFileFromDisk(filePath, offset, limit);
+export async function readFile(filePath: string, offset?: number, limit?: number): Promise<FileResult> {
+    return readFileFromDisk(filePath, offset, limit);
 }
 
-export async function writeFile(filePath: string, content: string): Promise<void> {
-    const validPath = await validatePath(filePath);
-    await fs.writeFile(validPath, content, "utf-8");
-}
 
 export interface MultiFileResult {
     path: string;
@@ -423,10 +360,6 @@ export async function readMultipleFiles(paths: string[]): Promise<MultiFileResul
     );
 }
 
-export async function createDirectory(dirPath: string): Promise<void> {
-    const validPath = await validatePath(dirPath);
-    await fs.mkdir(validPath, { recursive: true });
-}
 
 export async function listDirectory(dirPath: string): Promise<string[]> {
     const validPath = await validatePath(dirPath);
@@ -434,42 +367,7 @@ export async function listDirectory(dirPath: string): Promise<string[]> {
     return entries.map((entry) => `${entry.isDirectory() ? "[DIR]" : "[FILE]"} ${entry.name}`);
 }
 
-export async function moveFile(sourcePath: string, destinationPath: string): Promise<void> {
-    const validSourcePath = await validatePath(sourcePath);
-    const validDestPath = await validatePath(destinationPath);
-    await fs.rename(validSourcePath, validDestPath);
-}
 
-export async function searchFiles(rootPath: string, pattern: string): Promise<string[]> {
-    const results: string[] = [];
-
-    async function search(currentPath: string) {
-        const entries = await fs.readdir(currentPath, { withFileTypes: true });
-
-        for (const entry of entries) {
-            const fullPath = path.join(currentPath, entry.name);
-            
-            try {
-                await validatePath(fullPath);
-
-                if (entry.name.toLowerCase().includes(pattern.toLowerCase())) {
-                    results.push(fullPath);
-                }
-
-                if (entry.isDirectory()) {
-                    await search(fullPath);
-                }
-            } catch (error) {
-                continue;
-            }
-        }
-    }
-    
-    // if path not exist, it will throw an error
-    const validPath = await validatePath(rootPath);
-    await search(validPath);
-    return results;
-}
 
 export async function getFileInfo(filePath: string): Promise<Record<string, any>> {
     const validPath = await validatePath(filePath);

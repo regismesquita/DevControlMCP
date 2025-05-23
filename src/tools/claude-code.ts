@@ -1,6 +1,7 @@
-import { spawn } from 'child_process';
 import { ServerResult } from '../types.js';
 import { configManager } from '../config-manager.js';
+import { terminalManager } from '../terminal-manager.js';
+import { escapeShellArg, buildShellCommand } from '../utils/shell-escape.js';
 import path from 'path';
 import os from 'os';
 import { existsSync } from 'fs';
@@ -58,77 +59,49 @@ async function findClaudeCliExecutable(): Promise<string> {
   return configuredCliName;
 }
 
-/**
- * Spawns a child process and captures its stdout/stderr.
- */
-async function spawnClaudeCliProcess(command: string, args: string[], options?: { timeout?: number, cwd?: string }): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    debugLog(`Executing Claude CLI: ${command} ${args.join(' ')}`);
-    const childProcess = spawn(command, args, {
-      shell: false, // Always use `shell: false` for direct binary execution
-      timeout: options?.timeout,
-      cwd: options?.cwd,
-      stdio: ['ignore', 'pipe', 'pipe'] // Ignore stdin, pipe stdout/stderr
-    });
-
-    let stdoutBuffer = '';
-    let stderrBuffer = '';
-
-    childProcess.stdout.on('data', (data) => {
-      stdoutBuffer += data.toString();
-      debugLog(`Stdout chunk: ${data.toString().trim()}`);
-    });
-
-    childProcess.stderr.on('data', (data) => {
-      stderrBuffer += data.toString();
-      debugLog(`Stderr chunk: ${data.toString().trim()}`);
-    });
-
-    childProcess.on('close', (code) => {
-      debugLog(`Claude CLI process exited with code: ${code}`);
-      if (code === 0) {
-        resolve({ stdout: stdoutBuffer, stderr: stderrBuffer });
-      } else {
-        let errorMessage = `Claude CLI process failed with exit code ${code}.`;
-        if (stderrBuffer) {
-          errorMessage += `\nStderr: ${stderrBuffer.trim()}`;
-        }
-        if (stdoutBuffer) {
-          errorMessage += `\nStdout: ${stdoutBuffer.trim()}`;
-        }
-        reject(new Error(errorMessage));
-      }
-    });
-
-    childProcess.on('error', (err: NodeJS.ErrnoException) => {
-      debugLog(`Error spawning Claude CLI process: ${err.message}`);
-      let errorMessage = `Failed to execute Claude CLI: ${err.message}`;
-      if (err.code === 'ENOENT') {
-        errorMessage += `\n\nPossible cause: Claude CLI executable not found. Ensure it's installed and accessible via PATH, or configure 'claudeCliPath'/'claudeCliName' in DevControlMCP's config.json.`;
-      }
-      reject(new Error(errorMessage));
-    });
-  });
-}
 
 /**
  * Calls the Claude Code CLI with the given prompt and options.
+ * Now uses TerminalManager for async job management to handle long-running tasks.
+ * 
+ * @param prompt - The prompt to send to Claude Code
+ * @param workFolder - Optional working directory for Claude Code execution
+ * @param tools - Optional array of allowed tools for Claude Code to use
+ * 
+ * @returns ServerResult with either:
+ *   - Direct output if task completes within 30 seconds
+ *   - PID and instructions for async monitoring if task is still running
+ * 
+ * @remarks
+ * The function uses a 30-second initial timeout to determine if a job should be
+ * handled asynchronously. Jobs that exceed this timeout will continue running
+ * in the background indefinitely until:
+ *   - The process completes naturally
+ *   - The user calls force_terminate with the PID
+ *   - The MCP server is shut down
+ * 
+ * There is no maximum lifetime timeout for background jobs - they can run as long
+ * as needed. Users can check progress using read_output with the returned PID.
  */
 export async function callClaudeCode(prompt: string, workFolder?: string, tools?: string[]): Promise<ServerResult> {
   try {
     const claudeCliExecutable = await findClaudeCliExecutable();
+    
+    // Build command arguments
     const cliArgs: string[] = ['-p', prompt];
-
     if (tools && tools.length > 0) {
       cliArgs.push('--allowedTools', ...tools);
     }
 
     // Determine effective working directory
     let effectiveCwd = os.homedir(); // Default to home directory
+    let validWorkFolder: string | undefined;
+    
     if (workFolder) {
       const resolvedWorkFolder = path.resolve(workFolder);
       if (existsSync(resolvedWorkFolder)) {
         effectiveCwd = resolvedWorkFolder;
+        validWorkFolder = effectiveCwd;
         debugLog(`Using specified workFolder: ${effectiveCwd}`);
       } else {
         console.warn(`[Warning] Specified workFolder "${workFolder}" does not exist. Using default: ${effectiveCwd}`);
@@ -137,39 +110,63 @@ export async function callClaudeCode(prompt: string, workFolder?: string, tools?
       debugLog(`No workFolder specified, using default: ${effectiveCwd}`);
     }
 
-    // Set a reasonable timeout for Claude Code operations (e.g., 5 minutes)
-    const CLAUDE_CODE_TIMEOUT_MS = 300000; // 5 minutes
-
-    const { stdout, stderr } = await spawnClaudeCliProcess(
+    // Build the full command string for TerminalManager using our shell-safe utilities
+    const fullCommand = buildShellCommand(
       claudeCliExecutable,
       cliArgs,
-      { timeout: CLAUDE_CODE_TIMEOUT_MS, cwd: effectiveCwd }
+      {
+        // Only set working directory if we have a valid workFolder that's different from home
+        workingDirectory: validWorkFolder
+      }
     );
 
-    // Check for specific permission acceptance message in stderr
-    if (stderr.includes("permission") && stderr.includes("accept")) {
+    debugLog(`Executing Claude Code command: ${fullCommand}`);
+
+    // Use shorter initial timeout (30s) to return PID quickly for async operations
+    const INITIAL_TIMEOUT_MS = 30000; // 30 seconds
+    
+    // Execute command using TerminalManager
+    const result = await terminalManager.executeCommand(fullCommand, INITIAL_TIMEOUT_MS);
+
+    // Check for error condition (pid = -1)
+    if (result.pid === -1) {
+      return createErrorResponse(`Failed to start Claude Code process: ${result.output}`);
+    }
+
+    // Check for permission errors in initial output
+    if (result.output.includes("permission") && result.output.includes("accept")) {
+      // Clean up the process if it's still running
+      if (result.isBlocked) {
+        terminalManager.forceTerminate(result.pid);
+      }
       return createErrorResponse(
         `Claude Code CLI requires one-time permission acceptance. Please run ` +
-        `"${claudeCliExecutable} --dangerously-skip-permissions" in your terminal, ` +
-        `follow the prompts, and then restart DevControlMCP.`
+        `"${claudeCliExecutable} --dangerously-skip-permissions" in a separate terminal, ` +
+        `follow the prompts to accept permissions, and then try again.`
       );
     }
 
-    // Return stdout as the primary content
-    return {
-      content: [{ type: "text", text: stdout }],
-    };
+    // Format response based on whether the process completed or is still running
+    if (result.isBlocked) {
+      // Process is still running - return PID for async monitoring
+      return {
+        content: [{
+          type: "text",
+          text: `Claude Code job started with PID ${result.pid}\n` +
+                `Working directory: ${effectiveCwd}\n` +
+                `Initial output:\n${result.output}\n\n` +
+                `Job is still running. Use read_output with PID ${result.pid} to check status.`
+        }],
+      };
+    } else {
+      // Process completed quickly - return full output
+      return {
+        content: [{ type: "text", text: result.output }],
+      };
+    }
 
   } catch (error: any) {
     debugLog(`Error in callClaudeCode: ${error.message}`);
-    let errorMessage = error.message;
-    // Append stderr/stdout from the error if available (from spawnClaudeCliProcess)
-    if (error.stderr) {
-      errorMessage += `\nStderr: ${error.stderr}`;
-    }
-    if (error.stdout) {
-      errorMessage += `\nStdout: ${error.stdout}`;
-    }
-    return createErrorResponse(`Claude Code execution error: ${errorMessage}`);
+    return createErrorResponse(`Claude Code execution error: ${error.message}`);
   }
 }

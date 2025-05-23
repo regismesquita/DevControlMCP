@@ -12,10 +12,12 @@ DevControlMCP is an MCP (Model Context Protocol) tool that enables Claude deskto
 
 - **Terminal Operations**: Execute commands with output streaming, timeouts, and background execution
 - **Process Management**: List and manage running processes
-- **File Operations**: Read/write files, create/list directories, move files, and get metadata
-- **Advanced Search**: Find files by name or search within file contents using ripgrep
+- **File Operations**: Read files, list directories, and get metadata
+- **Advanced Search**: Powerful file search with glob patterns, content matching, and metadata filters
+- **Batch File Operations**: Unified write tool for creating, copying, moving, deleting files and directories
+- **Web Content Fetching**: Fetch URLs with HTML to Markdown conversion and image compression
 - **Code Editing**: Make surgical text replacements or full file rewrites
-- **URL Content**: Fetch and process content from URLs
+- **Code Search**: Search within file contents using ripgrep for high performance
 - **Claude Code Integration**: Delegate complex tasks to Claude Code CLI instances via the `claude_code` meta-tool
 - **Line-based File Reading**: Read files with line offset and limits for better handling of large files
 - **Audit Logging**: Track all tool calls with automatic log rotation
@@ -94,15 +96,14 @@ Tool call logs include:
 | | `list_sessions` | List all active terminal sessions |
 | | `list_processes` | List all running processes |
 | | `kill_process` | Terminate a process by PID |
-| **Filesystem** | `read_file` | Read local files or URLs with line offset and limits |
+| **Filesystem** | `read_file` | Read local files with line offset and limits |
 | | `read_multiple_files` | Read multiple files at once |
-| | `write_file` | Write to a file (replace contents) |
-| | `create_directory` | Create a new directory |
 | | `list_directory` | List files/directories |
-| | `move_file` | Move or rename files |
-| | `search_files` | Find files by name |
-| | `search_code` | Search for patterns in file contents |
 | | `get_file_info` | Get file metadata |
+| | `write` | Batch file operations (put, mkdir, copy, move, delete, touch) |
+| | `find` | Advanced file search with patterns and filters |
+| | `search_code` | Search for patterns in file contents using ripgrep |
+| **Web** | `fetch_url` | Fetch web content with HTML to Markdown conversion |
 | **Text Editing** | `edit_block` | Make surgical text replacements |
 | **Meta-Tool** | `claude_code` | Execute prompts via Claude Code CLI with full capabilities |
 
@@ -158,6 +159,118 @@ Configure Claude CLI paths in your DevControlMCP config:
 
 ⚠️ **IMPORTANT**: The `claude_code` tool bypasses DevControlMCP's internal permission system (`allowedDirectories`, `blockedCommands`) because it delegates to an external Claude CLI process. The Claude CLI operates with its own permissions that were accepted during the one-time setup.
 
+## New Enhanced Tools
+
+### Web Content Fetching (`fetch_url`)
+
+Fetch and process web content with intelligent HTML parsing and conversion.
+
+```json
+{
+  "url": "https://example.com/article",
+  "format": "markdown",
+  "timeoutMs": 30000
+}
+```
+
+**Features:**
+- HTML to Markdown conversion using Mozilla's Readability
+- Image compression for large images
+- Support for text, markdown, and base64 formats
+- Partial content fetching with offset and length
+- 30-second default timeout
+
+### Advanced File Search (`find`)
+
+Powerful file search combining multiple criteria with AND logic.
+
+```json
+{
+  "base_path": "/path/to/search",
+  "recursive": true,
+  "match_criteria": [
+    {
+      "type": "name_pattern",
+      "pattern": "*.{js,ts}"
+    },
+    {
+      "type": "content_pattern",
+      "pattern": "TODO|FIXME",
+      "is_regex": true,
+      "case_sensitive": false
+    },
+    {
+      "type": "metadata_filter",
+      "attribute": "size_bytes",
+      "operator": ">",
+      "value": 1000
+    }
+  ],
+  "entry_type_filter": "file",
+  "limit": 100,
+  "offset": 0
+}
+```
+
+**Search Criteria:**
+- **Name Pattern**: Glob patterns (e.g., `*.js`, `src/**/*.ts`)
+- **Content Pattern**: Text or regex search within files
+- **Metadata Filters**: Size, creation/modification dates, MIME type
+
+### Batch File Operations (`write`)
+
+Unified tool for all file write operations supporting batched transactions.
+
+```json
+{
+  "operations": [
+    {
+      "type": "mkdir",
+      "path": "/path/to/new/dir",
+      "recursive": true
+    },
+    {
+      "type": "put",
+      "path": "/path/to/file.txt",
+      "content": "File content",
+      "mode": "overwrite",
+      "encoding": "text"
+    },
+    {
+      "type": "copy",
+      "source": "/path/from",
+      "destination": "/path/to",
+      "overwrite": true
+    },
+    {
+      "type": "move",
+      "source": "/path/from",
+      "destination": "/path/to",
+      "overwrite": true
+    },
+    {
+      "type": "delete",
+      "path": "/path/to/delete",
+      "recursive": false
+    },
+    {
+      "type": "touch",
+      "path": "/path/to/touch.txt"
+    }
+  ]
+}
+```
+
+**Operations:**
+- **put**: Write file content (text or base64), supports append mode
+- **mkdir**: Create directories with optional recursive creation
+- **copy**: Copy files or directories with overwrite control
+- **move**: Move/rename files or directories
+- **delete**: Remove files or directories (recursive for non-empty dirs)
+- **touch**: Create empty file or update timestamps
+
+Each operation succeeds or fails independently, with detailed error reporting.
+
 ## Configuration Options
 
 The following configuration options can be set using the `set_config_value` tool:
@@ -211,7 +324,19 @@ These environment variables can be set in your shell profile for persistence or 
 - Set appropriate limits for binary file size and line reading to prevent memory exhaustion
 - This tool can completely destroy your system, files, projects and even worse... so be careful. By default, DevControlMCP tools have broad permissions. The `claude_code` tool, in particular, operates with full system access by design, bypassing DevControlMCP's specific permission settings.
 
-## What's New in v0.2.0
+## What's New
+
+### v0.3.0 - Enhanced Tools from ConduitMCP
+
+This release brings powerful new tools inspired by ConduitMCP, replacing several individual file operations with more capable alternatives:
+
+- **`fetch_url` Tool**: Web content fetching with HTML to Markdown conversion, image compression, and partial content support
+- **`find` Tool**: Advanced file search with glob patterns, content matching (regex support), and metadata filtering
+- **`write` Tool**: Unified batch file operations supporting put, mkdir, copy, move, delete, and touch in a single transaction
+- **Deprecated Tools Removed**: `write_file`, `create_directory`, `move_file`, and `search_files` have been replaced by the new tools
+- **URL Support Removed from `read_file`**: Use the dedicated `fetch_url` tool for web content
+
+### v0.2.0 - Core Enhancements
 
 This release includes several improvements from the upstream project:
 

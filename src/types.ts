@@ -51,3 +51,25 @@ export interface ServerResult {
 
 // Define a helper type for tool handler functions
 export type ToolHandler<T = unknown> = (args: T) => Promise<ServerResult>;
+
+// Entry info for find tool results
+export interface EntryInfo {
+  path: string;
+  type: 'file' | 'directory';
+  size?: number;
+  created?: string;
+  modified?: string;
+  accessed?: string;
+  permissions?: string;
+  mime_type?: string;
+  preview?: string;
+}
+
+// Write tool result item
+export interface WriteResultItem {
+  operation: string;
+  path: string;
+  success: boolean;
+  error?: string;
+  details?: Record<string, unknown>;
+}

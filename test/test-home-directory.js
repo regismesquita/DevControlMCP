@@ -12,10 +12,9 @@ import { configManager } from '../dist/config-manager.js';
 import { 
   validatePath, 
   listDirectory, 
-  readFile, 
-  writeFile, 
-  createDirectory 
+  readFile
 } from '../dist/tools/filesystem.js';
+import { handleWrite } from '../dist/handlers/write-handlers.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -185,7 +184,10 @@ async function testFileOperationsWithTilde() {
   try {
     // Test directory creation with tilde
     console.log(`Attempting to create directory: ${TEST_DIR_TILDE}`);
-    await createDirectory(TEST_DIR_TILDE);
+    const mkdirResult = await handleWrite({
+      operations: [{ type: 'mkdir', path: TEST_DIR_TILDE, recursive: true }]
+    });
+    assert(!mkdirResult.isError, 'Directory creation should succeed');
     console.log(`Created test directory: ${TEST_DIR_TILDE}`);
     
     // Verify the directory exists
@@ -194,7 +196,10 @@ async function testFileOperationsWithTilde() {
     
     // Test writing to a file with tilde
     console.log(`Attempting to write to file: ${TEST_FILE_TILDE}`);
-    await writeFile(TEST_FILE_TILDE, TEST_CONTENT);
+    const writeResult = await handleWrite({
+      operations: [{ type: 'put', path: TEST_FILE_TILDE, content: TEST_CONTENT }]
+    });
+    assert(!writeResult.isError, 'File write should succeed');
     console.log(`Wrote to test file: ${TEST_FILE_TILDE}`);
     
     // Test reading from a file with tilde
