@@ -142,7 +142,7 @@ export async function validatePath(requestedPath: string): Promise<string> {
         
         // Check if path exists
         try {
-            const stats = await fs.stat(absolute);
+            await fs.stat(absolute);
             // If path exists, resolve any symlinks
             return await fs.realpath(absolute);
         } catch (error) {
@@ -220,8 +220,8 @@ export async function readFileFromDisk(filePath: string, offset?: number, limit?
             // For all other files, try to read as UTF-8 text
             try {
                 // Use a streaming approach for reading files line by line
-                const { createReadStream } = require('fs');
-                const readline = require('readline');
+                const { createReadStream } = await import('fs');
+                const readline = await import('readline');
                 
                 // Check if the file exists and get basic stats
                 const stats = await fs.stat(validPath);
