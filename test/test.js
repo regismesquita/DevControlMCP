@@ -8,7 +8,8 @@ import { configManager } from '../dist/config-manager.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const TEST_FILEPATH = path.join(__dirname, 'test.txt')
+const TEST_FILENAME = 'test.txt';
+const TEST_FILEPATH = path.join(__dirname, TEST_FILENAME);
 
 async function setup() {
   // Save original config to restore later
@@ -25,7 +26,17 @@ async function teardown(originalConfig) {
   // Reset configuration to original
   await configManager.updateConfig(originalConfig);
 
-  await fs.rm(TEST_FILEPATH, { force: true, recursive: true });
+  // Clean up both possible file locations
+  try {
+    await fs.rm(TEST_FILENAME, { force: true, recursive: true });
+  } catch (e) {
+    // Ignore if file doesn't exist
+  }
+  try {
+    await fs.rm(TEST_FILEPATH, { force: true, recursive: true });
+  } catch (e) {
+    // Ignore if file doesn't exist
+  }
   // Clean up test directories
   console.log('✓ Teardown: test directories cleaned up and config restored');
 }
@@ -36,8 +47,8 @@ async function teardown(originalConfig) {
 async function testParseEditBlock() {
     try {
         await configManager.setValue('allowedDirectories', [__dirname]);
-        // Test parseEditBlock
-        const testBlock = `test.txt
+        // Test parseEditBlock - use full path in the edit block
+        const testBlock = `${TEST_FILEPATH}
 <<<<<<< SEARCH
 old content
 =======
@@ -46,16 +57,18 @@ new content
 
         const parsed = await parseEditBlock(testBlock);
         console.log('Parse test passed:', parsed);
+        console.log('TEST_FILEPATH:', TEST_FILEPATH);
 
-        // Create a test file
+        // Create a test file at the full path
         const fs = await import('fs/promises');
         await fs.writeFile(TEST_FILEPATH, 'This is old content to replace');
+        console.log('File created at:', TEST_FILEPATH);
+        const initialContent = await fs.readFile(TEST_FILEPATH, 'utf8');
+        console.log('Initial file content:', initialContent);
 
-        // Test performSearchReplace
-        await performSearchReplace(TEST_FILEPATH, {
-            search: 'old content',
-            replace: 'new content'
-        });
+        // Test performSearchReplace using the parsed result which has the correct relative path
+        const replaceResult = await performSearchReplace(parsed.filePath, parsed.searchReplace);
+        console.log('Replace result:', replaceResult);
 
         const result = await fs.readFile(TEST_FILEPATH, 'utf8');
         console.log('File content after replacement:', result);
@@ -66,8 +79,17 @@ new content
             throw new Error('Replace test failed!');
         }
 
-        // Cleanup
-        await fs.unlink(TEST_FILEPATH);
+        // Cleanup both possible locations
+        try {
+            await fs.unlink(TEST_FILENAME);
+        } catch (e) {
+            // File might not exist at this location
+        }
+        try {
+            await fs.unlink(TEST_FILEPATH);
+        } catch (e) {
+            // File might not exist at this location
+        }
         console.log('All tests passed! 🎉');
         return true;
     } catch (error) {
@@ -82,7 +104,12 @@ export default async function runTests() {
     let originalConfig;
     try {
       originalConfig = await setup();
-      await testParseEditBlock();
+      const testResult = await testParseEditBlock();
+      if (!testResult) {
+        console.error('❌ Test failed: testParseEditBlock returned false');
+        return false;
+      }
+      return true;
     } catch (error) {
       console.error('❌ Test failed:', error.message);
       return false;
@@ -91,7 +118,6 @@ export default async function runTests() {
         await teardown(originalConfig);
       }
     }
-    return true;
 }
 
 

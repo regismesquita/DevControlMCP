@@ -1,7 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
 import os from 'os';
-import fetch from 'cross-fetch';
 import {withTimeout} from '../utils.js';
 import {configManager} from '../config-manager.js';
 
@@ -143,7 +142,7 @@ export async function validatePath(requestedPath: string): Promise<string> {
         
         // Check if path exists
         try {
-            const stats = await fs.stat(absolute);
+            await fs.stat(absolute);
             // If path exists, resolve any symlinks
             return await fs.realpath(absolute);
         } catch (error) {
@@ -183,91 +182,25 @@ export interface FileResult {
 
 
 /**
- * Read file content from a URL
- * @param url URL to fetch content from
- * @returns File content or file result with metadata
- */
-export async function readFileFromUrl(url: string): Promise<FileResult> {
-    // Import the MIME type utilities
-    const { isImageFile } = await import('./mime-types.js');
-    
-    // Set up fetch with timeout
-    const FETCH_TIMEOUT_MS = 30000;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    
-    try {
-        const response = await fetch(url, {
-            signal: controller.signal
-        });
-        
-        // Clear the timeout since fetch completed
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        // Get MIME type from Content-Type header
-        const contentType = response.headers.get('content-type') || 'text/plain';
-        const isImage = isImageFile(contentType);
-        
-        if (isImage) {
-            // For images, convert to base64
-            const buffer = await response.arrayBuffer();
-            const content = Buffer.from(buffer).toString('base64');
-            
-            return { content, mimeType: contentType, isImage };
-        } else {
-            // For text content
-            const content = await response.text();
-            
-            return { content, mimeType: contentType, isImage };
-        }
-    } catch (error) {
-        // Clear the timeout to prevent memory leaks
-        clearTimeout(timeoutId);
-        
-        // Return error information instead of throwing
-        const errorMessage = error instanceof DOMException && error.name === 'AbortError'
-            ? `URL fetch timed out after ${FETCH_TIMEOUT_MS}ms: ${url}`
-            : `Failed to fetch URL: ${error instanceof Error ? error.message : String(error)}`;
-
-        throw new Error(errorMessage);
-    }
-}
-
-/**
  * Read file content from the local filesystem
  * @param filePath Path to the file
- * @param returnMetadata Whether to return metadata with the content
+ * @param offset Optional line offset to start reading from
+ * @param limit Optional maximum number of lines to read
  * @returns File content or file result with metadata
  */
-export async function readFileFromDisk(filePath: string): Promise<FileResult> {
+export async function readFileFromDisk(filePath: string, offset?: number, limit?: number): Promise<FileResult> {
     // Import the MIME type utilities
     const { getMimeType, isImageFile } = await import('./mime-types.js');
 
     const validPath = await validatePath(filePath);
     
-    // Check file size before attempting to read
-    try {
-        const stats = await fs.stat(validPath);
-        const MAX_SIZE = 100 * 1024; // 100KB limit
-        
-        if (stats.size > MAX_SIZE) {
-            const message = `File too large (${(stats.size / 1024).toFixed(2)}KB > ${MAX_SIZE / 1024}KB limit)`;
-            return { 
-                content: message, 
-                mimeType: 'text/plain', 
-                isImage: false 
-            };
-        }
-    } catch (error) {
-        console.error('error catch ' + error)
-        // Telemetry call removed
-        // If we can't stat the file, continue anyway and let the read operation handle errors
-        //console.error(`Failed to stat file ${validPath}:`, error);
-    }
+    // Get config to determine file read line limit
+    const config = await configManager.getConfig();
+    const DEFAULT_LINE_LIMIT = config.fileReadLineLimit || 1000; // Default to 1000 lines if not configured
+    
+    // Set the effective line limit (use provided limit or default)
+    const effectiveLimit = limit !== undefined ? limit : DEFAULT_LINE_LIMIT;
+    const effectiveOffset = offset || 0;
     
     // Detect the MIME type based on file extension
     const mimeType = getMimeType(validPath);
@@ -286,14 +219,84 @@ export async function readFileFromDisk(filePath: string): Promise<FileResult> {
         } else {
             // For all other files, try to read as UTF-8 text
             try {
-                const content = await fs.readFile(validPath, "utf-8");
+                // Use a streaming approach for reading files line by line
+                const { createReadStream } = await import('fs');
+                const readline = await import('readline');
+                
+                // Check if the file exists and get basic stats
+                const stats = await fs.stat(validPath);
+                // Get binary file size limit from config (default to 10MB if not set)
+                const binaryFileSizeLimit = config.binaryFileSizeLimit || 10 * 1024 * 1024;
+                
+                // If file is binary and large, apply size limit
+                if (stats.size > binaryFileSizeLimit && !mimeType.startsWith('text/')) {
+                    return { 
+                        content: `Binary file too large (${(stats.size / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is ${(binaryFileSizeLimit / 1024 / 1024).toFixed(0)} MB.`, 
+                        mimeType: 'text/plain', 
+                        isImage: false 
+                    };
+                }
+                
+                // Create readline interface for streaming file line by line
+                const fileStream = createReadStream(validPath, { encoding: 'utf8' });
+                const rl = readline.createInterface({
+                    input: fileStream,
+                    crlfDelay: Infinity
+                });
+                
+                let lineCount = 0; // Total lines in file
+                const lines: string[] = []; // Collected lines
+                
+                // Process each line
+                for await (const line of rl) {
+                    lineCount++;
+                    
+                    // Only collect lines within our range
+                    if (lineCount > effectiveOffset && lines.length < effectiveLimit) {
+                        lines.push(line);
+                    }
+                    
+                    // Get max line count limit from config (default to 1,000,000 if not set)
+                    const maxLineCountLimit = config.maxLineCountLimit || 1000000;
+                    
+                    // Stop counting if we've reached the configured upper limit
+                    if (lineCount > maxLineCountLimit) {
+                        // Set lineCount to the max limit to indicate it's a very large file
+                        lineCount = maxLineCountLimit;
+                        break;
+                    }
+                }
+                
+                // Format content with line info
+                let content = lines.join('\n');
+                
+                // Add a notice if we're not showing the full file
+                if (effectiveOffset > 0 || lines.length === effectiveLimit) {
+                    const startLine = effectiveOffset + 1;
+                    const endLine = effectiveOffset + lines.length;
+                    
+                    // Get max line count limit from config (default to 1,000,000 if not set)
+                    const maxLineCountLimit = config.maxLineCountLimit || 1000000;
+                    content = `[Showing lines ${startLine} to ${endLine} of ${lineCount}${lineCount === maxLineCountLimit ? '+' : ''} total lines]\n\n${content}`;
+                }
                 
                 return { content, mimeType, isImage };
             } catch (error) {
                 // If UTF-8 reading fails, treat as binary and return base64 but still as text
                 const buffer = await fs.readFile(validPath);
+                // Get binary file size limit from config
+                const binaryFileSizeLimit = config.binaryFileSizeLimit || 10 * 1024 * 1024; // Default to 10MB
+                
+                // Apply size limit for binary files
+                if (buffer.length > binaryFileSizeLimit) {
+                    return { 
+                        content: `Binary file too large (${(buffer.length / 1024 / 1024).toFixed(2)} MB). Maximum size for binary files is ${(binaryFileSizeLimit / 1024 / 1024).toFixed(0)} MB.`, 
+                        mimeType: 'text/plain', 
+                        isImage: false 
+                    };
+                }
+                
                 const content = `Binary file content (base64 encoded):\n${buffer.toString('base64')}`;
-
                 return { content, mimeType: 'text/plain', isImage: false };
             }
         }
@@ -314,22 +317,16 @@ export async function readFileFromDisk(filePath: string): Promise<FileResult> {
 }
 
 /**
- * Read a file from either the local filesystem or a URL
- * @param filePath Path to the file or URL
- * @param returnMetadata Whether to return metadata with the content
- * @param isUrl Whether the path is a URL
+ * Read a file from the local filesystem
+ * @param filePath Path to the file
+ * @param offset Optional line offset to start reading from
+ * @param limit Optional maximum number of lines to read
  * @returns File content or file result with metadata
  */
-export async function readFile(filePath: string, isUrl?: boolean): Promise<FileResult> {
-    return isUrl 
-        ? readFileFromUrl(filePath)
-        : readFileFromDisk(filePath);
+export async function readFile(filePath: string, offset?: number, limit?: number): Promise<FileResult> {
+    return readFileFromDisk(filePath, offset, limit);
 }
 
-export async function writeFile(filePath: string, content: string): Promise<void> {
-    const validPath = await validatePath(filePath);
-    await fs.writeFile(validPath, content, "utf-8");
-}
 
 export interface MultiFileResult {
     path: string;
@@ -363,10 +360,6 @@ export async function readMultipleFiles(paths: string[]): Promise<MultiFileResul
     );
 }
 
-export async function createDirectory(dirPath: string): Promise<void> {
-    const validPath = await validatePath(dirPath);
-    await fs.mkdir(validPath, { recursive: true });
-}
 
 export async function listDirectory(dirPath: string): Promise<string[]> {
     const validPath = await validatePath(dirPath);
@@ -374,42 +367,7 @@ export async function listDirectory(dirPath: string): Promise<string[]> {
     return entries.map((entry) => `${entry.isDirectory() ? "[DIR]" : "[FILE]"} ${entry.name}`);
 }
 
-export async function moveFile(sourcePath: string, destinationPath: string): Promise<void> {
-    const validSourcePath = await validatePath(sourcePath);
-    const validDestPath = await validatePath(destinationPath);
-    await fs.rename(validSourcePath, validDestPath);
-}
 
-export async function searchFiles(rootPath: string, pattern: string): Promise<string[]> {
-    const results: string[] = [];
-
-    async function search(currentPath: string) {
-        const entries = await fs.readdir(currentPath, { withFileTypes: true });
-
-        for (const entry of entries) {
-            const fullPath = path.join(currentPath, entry.name);
-            
-            try {
-                await validatePath(fullPath);
-
-                if (entry.name.toLowerCase().includes(pattern.toLowerCase())) {
-                    results.push(fullPath);
-                }
-
-                if (entry.isDirectory()) {
-                    await search(fullPath);
-                }
-            } catch (error) {
-                continue;
-            }
-        }
-    }
-    
-    // if path not exist, it will throw an error
-    const validPath = await validatePath(rootPath);
-    await search(validPath);
-    return results;
-}
 
 export async function getFileInfo(filePath: string): Promise<Record<string, any>> {
     const validPath = await validatePath(filePath);

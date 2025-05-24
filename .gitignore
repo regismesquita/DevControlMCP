@@ -37,3 +37,7 @@ coverage/
 .history
 
 server.log
+
+*.md
+!README.md
+!FAQ.md

@@ -1,11 +1,7 @@
 import {
     readFile,
     readMultipleFiles,
-    writeFile,
-    createDirectory,
     listDirectory,
-    moveFile,
-    searchFiles,
     getFileInfo,
     type FileResult,
     type MultiFileResult
@@ -18,11 +14,7 @@ import { createErrorResponse } from '../error-handlers.js';
 import {
     ReadFileArgsSchema,
     ReadMultipleFilesArgsSchema,
-    WriteFileArgsSchema,
-    CreateDirectoryArgsSchema,
     ListDirectoryArgsSchema,
-    MoveFileArgsSchema,
-    SearchFilesArgsSchema,
     GetFileInfoArgsSchema
 } from '../tools/schemas.js';
 
@@ -48,7 +40,11 @@ export async function handleReadFile(args: unknown): Promise<ServerResult> {
     
     const readFileOperation = async () => {
         const parsed = ReadFileArgsSchema.parse(args);
-        const fileResult = await readFile(parsed.path, parsed.isUrl);
+        const fileResult = await readFile(
+            parsed.path,
+            parsed.offset,
+            parsed.limit
+        );
         
         if (fileResult.isImage) {
             // For image files, return as an image content type
@@ -134,38 +130,6 @@ export async function handleReadMultipleFiles(args: unknown): Promise<ServerResu
     return { content: contentItems };
 }
 
-/**
- * Handle write_file command
- */
-export async function handleWriteFile(args: unknown): Promise<ServerResult> {
-    try {
-        const parsed = WriteFileArgsSchema.parse(args);
-        await writeFile(parsed.path, parsed.content);
-        
-        return {
-            content: [{ type: "text", text: `Successfully wrote to ${parsed.path}` }],
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return createErrorResponse(errorMessage);
-    }
-}
-
-/**
- * Handle create_directory command
- */
-export async function handleCreateDirectory(args: unknown): Promise<ServerResult> {
-    try {
-        const parsed = CreateDirectoryArgsSchema.parse(args);
-        await createDirectory(parsed.path);
-        return {
-            content: [{ type: "text", text: `Successfully created directory ${parsed.path}` }],
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return createErrorResponse(errorMessage);
-    }
-}
 
 /**
  * Handle list_directory command
@@ -183,63 +147,6 @@ export async function handleListDirectory(args: unknown): Promise<ServerResult> 
     }
 }
 
-/**
- * Handle move_file command
- */
-export async function handleMoveFile(args: unknown): Promise<ServerResult> {
-    try {
-        const parsed = MoveFileArgsSchema.parse(args);
-        await moveFile(parsed.source, parsed.destination);
-        return {
-            content: [{ type: "text", text: `Successfully moved ${parsed.source} to ${parsed.destination}` }],
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return createErrorResponse(errorMessage);
-    }
-}
-
-/**
- * Handle search_files command
- */
-export async function handleSearchFiles(args: unknown): Promise<ServerResult> {
-    try {
-        const parsed = SearchFilesArgsSchema.parse(args);
-        const timeoutMs = parsed.timeoutMs || 30000; // 30 seconds default
-        
-        // Apply timeout at the handler level
-        const searchOperation = async () => {
-            return await searchFiles(parsed.path, parsed.pattern);
-        };
-        
-        // Use withTimeout at the handler level
-        const results = await withTimeout(
-            searchOperation(),
-            timeoutMs,
-            'File search operation',
-            [] // Empty array as default on timeout
-        );
-        
-        if (results.length === 0) {
-            // Similar approach as in handleSearchCode
-            if (timeoutMs > 0) {
-                return {
-                    content: [{ type: "text", text: `No matches found or search timed out after ${timeoutMs}ms.` }],
-                };
-            }
-            return {
-                content: [{ type: "text", text: "No matches found" }],
-            };
-        }
-        
-        return {
-            content: [{ type: "text", text: results.join('\n') }],
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return createErrorResponse(errorMessage);
-    }
-}
 
 /**
  * Handle get_file_info command
